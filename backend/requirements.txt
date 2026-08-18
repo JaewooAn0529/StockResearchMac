@@ -1,0 +1,8 @@
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pykrx>=1.2.8
+pandas>=1.5.0
+python-dotenv>=1.0.0
+lxml>=4.9.0  # pandas.read_html / BeautifulSoup 파서용
+beautifulsoup4>=4.12.0  # 네이버금융 컨센서스 목표주가 파싱용
+anthropic>=0.69.0  # 멀티에이전트 토론
