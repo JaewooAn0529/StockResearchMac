@@ -1,12 +1,14 @@
-"""외국인/기관 순매수 추이 (지표 #2, 수급 동향).
+"""Foreign/institutional net buying trend (indicator #2, supply-demand trend).
 
-daily_log.py의 fetch_foreign_net_buy는 "특정일의 전체 종목 top-N"을 뽑는
-용도라 종목 상세 화면에는 안 맞는다. 대신 get_market_trading_value_by_date로
-한 종목의 기간별 투자자별(외국인/기관) 순매수 금액 시계열을 가져온다.
-detail=False(기본값) 기준 컬럼은 기관합계/기타법인/개인/외국인합계/전체.
+daily_log.py's fetch_foreign_net_buy is built for pulling the "top-N stocks
+market-wide on a given day," which doesn't fit a per-stock detail view. Instead,
+we use get_market_trading_value_by_date to get a time series of net buying
+amounts by investor type (foreign/institutional) for a single stock over a
+period. With detail=False (the default), the columns are institution total /
+other corporations / individuals / foreign total / overall.
 """
 
-from __future__ import annotations  # list[dict] | None 문법은 Python 3.10+ 필요 (이 환경은 3.9)
+from __future__ import annotations  # the `list[dict] | None` syntax needs Python 3.10+ (this environment runs 3.9)
 
 from datetime import datetime, timedelta, timezone
 

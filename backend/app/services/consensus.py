@@ -1,11 +1,13 @@
-"""애널리스트 컨센서스 목표주가 (지표 #9).
+"""Analyst consensus target price (indicator #9).
 
-이건 "우리 자체 판단"이 아니라 "증권사들의 공개된 데이터 인용"이므로 자체
-분석 지표와 분리해서 다루고, source 필드로 출처를 명확히 밝힌다.
+This is a "quote of publicly available brokerage data," not "our own judgment,"
+so it's handled separately from our own analytical indicators, and the source
+field clearly discloses where it came from.
 
-pykrx에는 컨센서스 데이터가 없다. 네이버금융의 coinfo.naver 종목분석 페이지에
-에프앤가이드가 집계한 "투자의견/목표주가" 표가 공개되어 있어 이를 파싱한다.
-(증권사 추정치가 3곳 미만인 종목은 이 표 자체가 비어 있을 수 있다 — 그 경우 None)
+pykrx has no consensus data. Naver Finance's coinfo.naver stock-analysis page
+publishes an "opinion / target price" table aggregated by FnGuide, so we parse
+that. (For stocks covered by fewer than 3 brokerages, this table itself may be
+empty — in that case we return None.)
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ def get_consensus(ticker: str) -> dict | None:
 
     ems = first_row_td.find_all("em")
     if len(ems) < 2:
-        return None  # 커버리지(추정 증권사 3곳 이상) 없는 종목
+        return None  # no coverage (fewer than 3 brokerages providing estimates)
 
     opinion_score_text = ems[0].get_text(strip=True)
     target_price_text = ems[1].get_text(strip=True)

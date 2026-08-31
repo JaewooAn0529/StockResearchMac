@@ -1,14 +1,15 @@
-"""기술적 지표 (지표 #3): 이동평균 이격도, 거래량 급증, RSI/MACD/볼린저밴드.
+"""Technical indicators (indicator #3): moving-average disparity, volume spikes, RSI/MACD/Bollinger Bands.
 
-price.py가 반환하는 정제된 리스트가 아니라 원본 OHLCV DataFrame이 필요해서
-(rolling 계산용) 여기서 별도로 pykrx를 호출한다.
+We call pykrx separately here because we need the raw OHLCV DataFrame (for
+rolling calculations), not the cleaned-up list that price.py returns.
 
-RSI/MACD/볼린저밴드는 OpenBB 같은 플랫폼이 제공하는 표준 지표인데, 우리가
-이미 들고 있는 OHLCV로 직접 계산할 수 있어서 의존성을 추가하지 않았다
-(OpenBB는 AGPLv3라 라이선스도 맞지 않고 한국 주식도 커버하지 않는다).
+RSI/MACD/Bollinger Bands are standard indicators offered by platforms like
+OpenBB, but since we can compute them directly from the OHLCV data we already
+have, we didn't add that dependency (OpenBB is AGPLv3, which doesn't fit our
+license, and it doesn't cover Korean stocks anyway).
 
-이 값들은 "지금 이 상태다"라는 계산 결과지, 앞으로 오른다/내린다는 예측이
-아니다 — 화면에서도 그렇게만 표시한다.
+These values are a computed snapshot of "this is the current state," not a
+prediction of future direction — they're presented to the user that way too.
 """
 
 from __future__ import annotations
@@ -22,13 +23,13 @@ KST = timezone(timedelta(hours=9))
 
 
 def _rsi(close: pd.Series, period: int = 14) -> float | None:
-    """Wilder RSI. 0~100이고 통상 70↑ 과매수, 30↓ 과매도 구간으로 본다."""
+    """Wilder RSI. Ranges 0-100; conventionally, above 70 is considered overbought and below 30 oversold."""
     if len(close) < period + 1:
         return None
     delta = close.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
-    # Wilder 평활(alpha=1/period). 단순평균보다 표준 구현에 가깝다
+    # Wilder smoothing (alpha=1/period) — closer to the standard implementation than a simple average
     avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean().iloc[-1]
     avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean().iloc[-1]
     if avg_loss == 0:
@@ -38,7 +39,7 @@ def _rsi(close: pd.Series, period: int = 14) -> float | None:
 
 
 def _macd(close: pd.Series) -> tuple[float | None, float | None, float | None]:
-    """MACD(12,26,9) → (macd, signal, histogram)."""
+    """MACD(12,26,9) -> (macd, signal, histogram)."""
     if len(close) < 35:
         return None, None, None
     ema12 = close.ewm(span=12, adjust=False).mean()
@@ -54,9 +55,9 @@ def _macd(close: pd.Series) -> tuple[float | None, float | None, float | None]:
 
 
 def _bollinger(close: pd.Series, period: int = 20, num_std: float = 2.0):
-    """볼린저밴드(20, 2σ) → (upper, middle, lower, %B).
+    """Bollinger Bands(20, 2sigma) -> (upper, middle, lower, %B).
 
-    %B는 밴드 내 현재 위치(0=하단, 1=상단). 밴드 폭이 0이면 정의되지 않는다.
+    %B is the current position within the band (0 = lower, 1 = upper). Undefined if the band width is 0.
     """
     if len(close) < period:
         return None, None, None, None
@@ -81,7 +82,7 @@ def get_technical(ticker: str, days: int = 250) -> dict | None:
     start = end - timedelta(days=days)
     df = stock.get_market_ohlcv(start.strftime("%Y%m%d"), end.strftime("%Y%m%d"), ticker)
     if df is None or df.empty or len(df) < 60:
-        return None  # MA60 계산에 최소 60거래일 필요
+        return None  # need at least 60 trading days to compute MA60
 
     close = df["종가"]
     volume = df["거래량"]

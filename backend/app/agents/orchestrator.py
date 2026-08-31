@@ -1,4 +1,4 @@
-"""전체 파이프라인: 데이터 수집 → 분석가 → 토론 → 트레이더 → 리스크 매니저."""
+"""The full pipeline: data gathering → analysts → debate → trader → risk manager."""
 
 from __future__ import annotations
 
@@ -26,12 +26,13 @@ KST = timezone(timedelta(hours=9))
 
 
 def gather_data(ticker: str, name: str) -> dict:
-    """7개 데이터 소스를 병렬로 수집한다.
+    """Gathers 7 data sources in parallel.
 
-    peers는 종목 6개를 순차 조회해서 혼자 ~9초 걸리므로, 순차로 돌리면
-    데이터 수집만으로 20초가 넘는다. 개별 소스 실패는 None으로 흘려보내고
-    에이전트가 "데이터 없음"으로 처리하게 둔다 — 하나 깨졌다고 분석 전체를
-    막을 이유가 없다.
+    peers alone takes ~9 seconds because it queries 6 stocks sequentially, so running
+    everything sequentially would push data gathering past 20 seconds by itself.
+    Individual source failures are passed through as None and left for the agent to
+    handle as "no data" — there's no reason a single broken source should block the
+    whole analysis.
     """
     jobs = {
         "price": lambda: price_service.get_price_and_chart(ticker),
@@ -57,12 +58,13 @@ def gather_data(ticker: str, name: str) -> dict:
 
 
 def apply_risk_gate(decision: dict, risk: dict) -> dict:
-    """리스크 매니저의 판정을 실제로 결정에 반영한다(승인 게이트).
+    """Actually applies the risk manager's verdict to the decision (the approval gate).
 
-    이전에는 리스크 매니저가 reject해도 최종 결정이 그대로 나가서, 검토가
-    형식적인 절차에 그쳤다. 이제 reject/revise면 매매 방향(BUY/SELL)을 HOLD로
-    강등한다 — 안전한 쪽으로만 움직이고, 원래 결정은 original_decision에
-    남겨서 무엇이 어떻게 뒤집혔는지 화면에서 볼 수 있게 한다.
+    Previously, even if the risk manager rejected a decision, the final decision went
+    out unchanged, making the review a formality. Now a reject/revise verdict downgrades
+    a trade direction (BUY/SELL) to HOLD — moving only toward the safer side — and the
+    original decision is kept in original_decision so the UI can show what was
+    overridden and how.
     """
     verdict = (risk.get("verdict") or "").lower()
     original = decision.get("decision")
@@ -80,7 +82,7 @@ def apply_risk_gate(decision: dict, risk: dict) -> dict:
             f"(원래 트레이더 판단) {decision.get('rationale', '')}"
         )
 
-    # 리스크 매니저가 확신도를 낮췄으면 그것도 반영한다
+    # If the risk manager lowered the confidence level, apply that too
     adjusted = risk.get("adjusted_confidence")
     if adjusted:
         gated["confidence"] = adjusted

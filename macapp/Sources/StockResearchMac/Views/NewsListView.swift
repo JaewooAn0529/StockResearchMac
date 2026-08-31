@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 네이버 뉴스 API는 썸네일 이미지나 3줄 요약을 안 주고 제목+짧은 설명만 준다
-/// (app/services/news.py 참고) — 원문 링크로 바로 열 수 있게 한다.
+/// The Naver News API doesn't provide thumbnail images or a 3-line summary,
+/// only a title and short description (see app/services/news.py) — so we let
+/// users open the original article link directly.
 struct NewsListView: View {
     let state: LoadState<NewsResponse>
 

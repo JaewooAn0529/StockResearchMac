@@ -1,4 +1,4 @@
-"""토론 화면용 픽셀아트 에셋 일괄 생성. 모델을 한 번만 로드해서 여러 장 뽑는다."""
+"""Batch-generates pixel-art assets for the discussion screen. Loads the model once and produces multiple images."""
 
 import torch
 from diffusers import StableDiffusionPipeline

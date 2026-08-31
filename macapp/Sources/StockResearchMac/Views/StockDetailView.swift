@@ -132,8 +132,8 @@ struct StockDetailView: View {
         newsState = .loading
     }
 
-    // 10개 지표를 각자 독립적으로 로딩한다 — 하나가 실패해도 나머지 카드는
-    // 정상 표시된다(백엔드 orchestrator.gather_data와 같은 철학).
+    // Loads each of the 10 indicators independently — if one fails, the other
+    // cards still display normally (the same philosophy as the backend's orchestrator.gather_data).
     private func loadPrice() async {
         do { priceState = .loaded(try await APIClient.shared.price(ticker)) }
         catch { priceState = .failed(error.localizedDescription) }

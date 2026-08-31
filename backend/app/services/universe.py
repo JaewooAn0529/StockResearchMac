@@ -1,9 +1,11 @@
-"""KOSPI/KOSDAQ 전체 종목 마스터 캐싱 + 검색.
+"""Caching and searching the full KOSPI/KOSDAQ stock master list.
 
-pykrx의 get_market_ticker_list()/get_market_ticker_name()이 의존하는 KRX
-"전종목시세"(MDCSTAT01501) 리포트가 봇 차단으로 막혀 있어(400 LOGOUT, 세션
-쿠키를 줘도 동일) 대신 한국거래소 자회사 KIND(kind.krx.co.kr)의 상장법인목록
-다운로드를 사용한다. 이건 공개적으로 열려 있고 시장구분까지 포함되어 있다.
+The KRX "all-stock quotes" (MDCSTAT01501) report that pykrx's
+get_market_ticker_list()/get_market_ticker_name() depend on is blocked by
+anti-bot protection (400 LOGOUT, even when a session cookie is supplied). We
+use the listed-company list download from KIND (kind.krx.co.kr), a subsidiary
+of the Korea Exchange, instead. This is publicly accessible and even includes
+the market classification.
 """
 
 from __future__ import annotations
@@ -35,7 +37,7 @@ def _build_universe() -> list[dict]:
     entries = []
     for _, row in df.iterrows():
         market = _MARKET_MAP.get(row["시장구분"])
-        if market is None:  # 코넥스 등 스코프 밖 시장은 제외
+        if market is None:  # exclude out-of-scope markets like KONEX
             continue
         entries.append({
             "ticker": row["종목코드"],
@@ -66,7 +68,7 @@ def get_market(ticker: str) -> str | None:
 
 
 def get_peers(ticker: str, limit: int = 5) -> list[dict] | None:
-    """같은 업종의 다른 종목들 (자기 자신 제외)."""
+    """Other stocks in the same industry (excluding itself)."""
     entry = get_by_ticker(ticker)
     if entry is None or not entry["industry"]:
         return None

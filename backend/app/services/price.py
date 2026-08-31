@@ -1,10 +1,10 @@
-"""시세 + 차트. stock-briefing/briefing.py의 get_price 패턴을 확장한 버전.
+"""Price + chart. An extended version of the get_price pattern from stock-briefing/briefing.py.
 
-기존 get_price는 최신가/등락률만 반환했는데, 여기서는 차트용으로 기간 전체
-OHLCV 시계열도 함께 반환한다.
+The original get_price only returned the latest price and the change percentage;
+here we also return the full OHLCV time series for the period, for charting.
 """
 
-from __future__ import annotations  # dict | None 문법은 Python 3.10+ 필요 (이 환경은 3.9)
+from __future__ import annotations  # the `dict | None` syntax needs Python 3.10+ (this environment runs 3.9)
 
 from datetime import datetime, timedelta, timezone
 

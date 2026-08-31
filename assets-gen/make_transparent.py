@@ -1,12 +1,14 @@
-"""생성된 스프라이트의 배경을 투명화한다.
+"""Makes the background of generated sprites transparent.
 
-flood-fill 방식은 배경에 미세한 세로줄/격자 노이즈가 있으면 연결이 끊겨서
-못 퍼진다(실측: technical은 2%만 지워졌다). 그래서 "배경색과 비슷한 픽셀"을
-전부 후보로 잡은 뒤, 캐릭터 실루엣(가장 큰 비배경 덩어리)만 남기고 나머지를
-지우는 방식으로 바꿨다.
+The flood-fill approach breaks down when the background has faint vertical
+line/grid noise, since the connection gets cut and it can't spread (measured:
+only 2% got cleared for "technical"). So instead, we mark every pixel that's
+"close to the background color" as a candidate, then keep only the character's
+silhouette (the largest non-background blob) and erase the rest.
 
-캐릭터 내부의 흰 셔츠처럼 배경색과 비슷한 색도, 실루엣 안에 갇혀 있으면
-(=바깥과 연결되지 않으면) 살린다 — 실루엣 내부 구멍 메우기로 처리.
+Colors similar to the background inside the character — like a white shirt —
+are preserved as long as they're trapped inside the silhouette (i.e. not
+connected to the outside) — handled by filling in the holes inside the silhouette.
 """
 
 import glob
@@ -22,7 +24,7 @@ def transparent_background(path: str) -> None:
     w, h = img.size
     px = img.load()
 
-    # 테두리 픽셀들의 최빈색을 배경색으로 본다 (모서리 4개보다 노이즈에 강함)
+    # Treat the mode color of the border pixels as the background color (more noise-resistant than just the 4 corners)
     border = []
     for x in range(w):
         border.append(px[x, 0][:3])
@@ -41,10 +43,10 @@ def transparent_background(path: str) -> None:
             and abs(p[2] - bg_b) <= TOLERANCE
         )
 
-    # 1) 비배경(=캐릭터 후보) 마스크
+    # 1) Non-background (= character candidate) mask
     fg = [[not is_bg(px[x, y]) for x in range(w)] for y in range(h)]
 
-    # 2) 가장 큰 연결 덩어리만 캐릭터로 인정 (배경 노이즈 점들 제거)
+    # 2) Only accept the largest connected blob as the character (removes background noise specks)
     seen = [[False] * w for _ in range(h)]
     best_component: list[tuple[int, int]] = []
     for sy in range(h):
@@ -68,8 +70,8 @@ def transparent_background(path: str) -> None:
     for x, y in best_component:
         keep[y][x] = True
 
-    # 3) 실루엣 내부의 구멍(셔츠 등 배경색과 비슷한 부분)을 메운다:
-    #    테두리에서 flood-fill로 "바깥"을 찾고, 바깥이 아니면 캐릭터로 친다
+    # 3) Fill in holes inside the silhouette (parts similar to the background color, like a shirt):
+    #    flood-fill from the border to find the "outside," and treat anything that isn't outside as the character
     outside = [[False] * w for _ in range(h)]
     q = deque()
     for x in range(w):
@@ -104,6 +106,6 @@ def transparent_background(path: str) -> None:
 if __name__ == "__main__":
     for path in sorted(glob.glob("sprite_*.png")):
         if "background" in path:
-            continue  # 오피스 배경은 투명화하면 안 된다
+            continue  # Don't make the office background transparent
         transparent_background(path)
     print("완료")

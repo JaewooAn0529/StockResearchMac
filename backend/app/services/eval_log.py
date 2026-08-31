@@ -1,13 +1,13 @@
-"""지난 토론 판단을 기록하고 나중에 실제 주가와 대조한다.
+"""Record past debate decisions and later compare them against the actual stock price.
 
-⚠️ 이건 예측 성능을 보장하거나 미래를 맞히는 기능이 아니라, "그때 이렇게
-판단했고 이후 주가는 이렇게 움직였다"는 사후 기록 조회다. 화면에도 그렇게만
-표시한다.
+⚠️ This does not guarantee predictive performance or claim to foresee the future —
+it's a retrospective lookup of "this is what we judged at the time, and this is
+how the price moved afterward." It's presented to the user that way as well.
 
-Paperclip의 agent evals / feedback loop 아이디어를 가져온 것 — 에이전트가
-낸 판단을 남겨두고 나중에 되돌아볼 수 있게 한다.
+Borrowed from Paperclip's agent evals / feedback loop idea — leave a record of
+what the agent judged so it can be reviewed later.
 
-저장은 개인용 도구 규모에 맞춰 JSON Lines 한 파일로 한다(DB 불필요).
+Storage is a single JSON Lines file, sized for a personal tool (no DB needed).
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ LOG_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "decisions.j
 
 
 def record_decision(result: dict) -> None:
-    """토론 결과에서 판단 부분만 뽑아 append한다. 실패해도 토론 응답은 살린다."""
+    """Extract just the decision part from a debate result and append it. Failure here doesn't break the debate response."""
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         decision = result.get("decision", {})
@@ -45,7 +45,7 @@ def record_decision(result: dict) -> None:
 
 
 def _price_on_or_after(ticker: str, target: date) -> tuple[str, int] | None:
-    """해당 날짜 이후 첫 거래일의 종가. 휴장일이면 다음 영업일로 밀린다."""
+    """Closing price on the first trading day on or after the given date. Rolls forward to the next business day if it's a market holiday."""
     df = stock.get_market_ohlcv(
         target.strftime("%Y%m%d"),
         (target + timedelta(days=10)).strftime("%Y%m%d"),
@@ -57,7 +57,7 @@ def _price_on_or_after(ticker: str, target: date) -> tuple[str, int] | None:
 
 
 def get_history(limit: int = 30) -> list[dict]:
-    """기록된 판단들에 "그 이후 주가 변화"를 붙여서 최신순으로 돌려준다."""
+    """Attach "how the price changed afterward" to each recorded decision and return them newest-first."""
     if not LOG_PATH.exists():
         return []
 
@@ -71,7 +71,7 @@ def get_history(limit: int = 30) -> list[dict]:
                 except json.JSONDecodeError:
                     continue
 
-    entries = entries[-limit:][::-1]  # 최신순
+    entries = entries[-limit:][::-1]  # newest first
 
     today = datetime.now(KST).date()
     for e in entries:
@@ -79,15 +79,16 @@ def get_history(limit: int = 30) -> list[dict]:
         e["price_now"] = None
         e["return_pct"] = None
         e["days_elapsed"] = None
-        # 판단 당일에는 아직 종가가 안 나와서 대조할 게 없다. 이걸 화면에서
-        # "데이터 없음"과 구분해 안내하려고 상태를 따로 내려준다.
+        # On the day of the decision, the closing price isn't out yet so there's
+        # nothing to compare against. We report a separate status so the UI can
+        # distinguish this from "no data."
         e["status"] = "pending"
         try:
             decided = datetime.fromisoformat(e["decided_at"]).date()
             e["days_elapsed"] = (today - decided).days
 
             then = _price_on_or_after(e["ticker"], decided)
-            # 최근 종가는 며칠 전부터 훑어서 가장 마지막 거래일을 잡는다
+            # For the current price, scan back a few days to land on the most recent trading day
             now = _price_on_or_after(e["ticker"], today - timedelta(days=7))
 
             if then and now and then[1]:
@@ -96,7 +97,7 @@ def get_history(limit: int = 30) -> list[dict]:
                 e["return_pct"] = round((now[1] - then[1]) / then[1] * 100, 2)
                 e["status"] = "ready"
             else:
-                e["status"] = "pending"  # 판단 당일이라 아직 종가 미확정
+                e["status"] = "pending"  # decision was made today, closing price not settled yet
         except Exception as exc:
             print(f"[warn] 판단 대조 실패 ({e.get('ticker')}): {exc}")
             e["status"] = "error"

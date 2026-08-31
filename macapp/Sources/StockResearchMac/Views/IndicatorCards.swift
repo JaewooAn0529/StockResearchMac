@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// 지표 10개(뉴스 포함)를 각자 독립적으로 로딩하기 위한 상태.
-/// 하나가 실패해도 나머지 카드는 정상 표시된다 — 백엔드 orchestrator.gather_data와
-/// 같은 철학.
+/// State for loading each of the 10 indicators (including news) independently.
+/// If one fails, the other cards still display normally — the same philosophy
+/// as the backend's orchestrator.gather_data.
 enum LoadState<T> {
     case loading
     case loaded(T)
@@ -24,7 +24,7 @@ private func formatEok(_ won: Int) -> String {
 struct CardContainer<Content: View>: View {
     let title: String
     var icon: String? = nil
-    var iconColor: Color? = nil  // nil이면 tinted 여부로 기본색 결정
+    var iconColor: Color? = nil  // if nil, the default color is decided by `tinted`
     var tinted: Bool = false
     @ViewBuilder var content: () -> Content
 
@@ -70,7 +70,7 @@ struct CardStateView<T>: View {
     }
 }
 
-// MARK: - 수급 (외국인/기관)
+// MARK: - Flow (foreign/institutional)
 
 struct FlowCard: View {
     let state: LoadState<FlowsResponse>
@@ -96,7 +96,7 @@ struct FlowCard: View {
     }
 }
 
-// MARK: - 밸류에이션
+// MARK: - Valuation
 
 struct ValuationCard: View {
     let state: LoadState<ValuationResponse>
@@ -123,7 +123,7 @@ struct ValuationCard: View {
     }
 }
 
-// MARK: - 컨센서스 (자체 분석 아님 — 시각적으로 구분)
+// MARK: - Consensus (not our own analysis — visually distinguished)
 
 struct ConsensusCard: View {
     let state: LoadState<ConsensusResponse>
@@ -144,7 +144,7 @@ struct ConsensusCard: View {
     }
 }
 
-// MARK: - 기술적 지표
+// MARK: - Technical indicators
 
 struct TechnicalCard: View {
     let state: LoadState<TechnicalResponse>
@@ -169,7 +169,7 @@ struct TechnicalCard: View {
                         if let rsi = data.rsi14 {
                             HStack(spacing: 4) {
                                 Text("RSI(14) \(rsi, specifier: "%.1f")").font(.caption)
-                                // 통상적 해석 구간을 색으로만 힌트 — 매매 신호가 아니다
+                                // Just a color hint for the conventional interpretation range — not a trading signal
                                 Text(rsi >= 70 ? "과매수 구간" : (rsi <= 30 ? "과매도 구간" : "중립 구간"))
                                     .font(.caption2)
                                     .foregroundStyle(rsi >= 70 ? .red : (rsi <= 30 ? .blue : .secondary))
@@ -188,7 +188,7 @@ struct TechnicalCard: View {
     }
 }
 
-// MARK: - 변동성/베타
+// MARK: - Volatility/beta
 
 struct VolatilityCard: View {
     let state: LoadState<VolatilityResponse>
@@ -209,7 +209,7 @@ struct VolatilityCard: View {
     }
 }
 
-// MARK: - 동종업계 비교
+// MARK: - Peer comparison
 
 struct PeersCard: View {
     let state: LoadState<PeerComparisonResponse>
@@ -236,7 +236,7 @@ struct PeersCard: View {
     }
 }
 
-// MARK: - 실적발표 캘린더
+// MARK: - Earnings calendar
 
 struct EarningsCalendarCard: View {
     let state: LoadState<EarningsCalendarResponse>
@@ -256,7 +256,7 @@ struct EarningsCalendarCard: View {
     }
 }
 
-// MARK: - 리스크 체크리스트
+// MARK: - Risk checklist
 
 struct RiskFlagsCard: View {
     let state: LoadState<RiskFlagsResponse>

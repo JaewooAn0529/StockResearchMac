@@ -1,68 +1,78 @@
 # StockResearchMac
 
-한국 주식(KOSPI·KOSDAQ) 개인용 리서치 앱. 9개 실측 지표부터 멀티에이전트 AI
-토론, 픽셀아트 오피스 연출까지 하나의 맥 전용 도구로 묶었다. App Store에는
-내지 않는, 본인 맥에서만 쓰는 개인용 도구다.
+A personal research app for Korean stocks (KOSPI/KOSDAQ). Bundles 9
+empirically-grounded indicators, multi-agent AI debate, and a pixel-art office
+scene into a single Mac-only tool. It isn't shipped to the App Store — a
+personal tool meant to run only on the owner's own Mac.
 
-## 구성
+## Structure
 
 ```
-backend/    FastAPI 서버 — pykrx/DART/네이버 데이터 + 멀티에이전트 LLM 토론
-macapp/     SwiftUI macOS 앱 (Swift Package Manager, Xcode 프로젝트 없음)
-assets-gen/ 픽셀아트 캐릭터 스프라이트 생성 파이프라인 (스크립트만 포함)
+backend/    FastAPI server — pykrx/DART/Naver data + multi-agent LLM debate
+macapp/     SwiftUI macOS app (Swift Package Manager, no Xcode project)
+assets-gen/ Pixel-art character sprite generation pipeline (scripts only)
 ```
 
-각 하위 디렉터리의 README에 더 자세한 설명이 있다: [backend/README.md](backend/README.md), [macapp/README.md](macapp/README.md)
+Each subdirectory's README has more detail: [backend/README.md](backend/README.md), [macapp/README.md](macapp/README.md)
 
-## 기능
+## Features
 
-**리서치 지표 (9개 카드)** — 시세·차트, 외국인/기관 수급, PER/PBR 밸류에이션(1년
-밴드 포함), 증권사 컨센서스, 기술적 지표(RSI·MACD·볼린저밴드), 변동성/베타,
-동종업계 비교, 공시 일정(D-day), 리스크 키워드 필터링, 관련 뉴스.
+**Research indicators (9 cards)** — price/chart, foreign/institutional flows,
+PER/PBR valuation (including a 1-year band), brokerage consensus, technical
+indicators (RSI, MACD, Bollinger Bands), volatility/beta, peer comparison,
+disclosure calendar (D-day), risk-keyword filtering, related news.
 
-**AI 멀티에이전트 토론** — 분석가 4인 병렬 분석 → 불/베어 2라운드 토론 →
-트레이더 판단 → 리스크 매니저 검토. 리스크 매니저가 반려(reject)·수정요청
-(revise)하면 BUY/SELL을 HOLD로 자동 강등하고, 원래 판단은 보존해 화면에
-그대로 노출한다(리스크 승인 게이트). LLM은 로컬 Ollama(무료)와 Anthropic
-API(유료) 중 환경변수로 전환 가능.
+**AI multi-agent debate** — 4 analysts run in parallel → bull/bear debate over
+2 rounds → trader decision → risk manager review. If the risk manager rejects
+or requests a revision, BUY/SELL is automatically downgraded to HOLD, while the
+original decision is preserved and still shown on screen (a risk approval
+gate). The LLM can be switched via environment variable between local Ollama
+(free) and the Anthropic API (paid).
 
-**컴플라이언스 안전장치** — 포지션 현황판은 매수가·매수일 입력 시 현재가
-대비 손익을 순수 계산으로만 표시한다(예측 요소 없음). 과거 유사 패턴 참고
-기능은 "역사적으로는~" 같은 과거형 문구만 쓰고, 표본이 2건 미만이면
-"참고할 만한 과거 사례가 충분하지 않습니다"로 자동 차단한다. 전역 면책
-고지는 백엔드가 직접 조립해 프론트가 임의로 문구를 바꿀 수 없다.
+**Compliance safeguards** — once a buy price and buy date are entered, the
+position dashboard shows profit/loss versus the current price as a pure
+calculation only (no predictive element). The past-pattern reference feature
+only uses past-tense phrasing ("historically, ...") and automatically blocks
+itself with "not enough historical cases to reference" whenever the sample is
+fewer than 2 cases. The global disclaimer notice is assembled directly by the
+backend, so the frontend can't alter its wording.
 
-**감사·회고** — 토론 단계별 소요시간과 총 LLM 호출 수를 기록. 지난 판단은
-JSON Lines로 남겨 실제 주가와 사후 대조한다(예측이 아닌 기록 조회임을
-명시).
+**Audit & retrospective** — records the time spent on each debate stage and
+the total number of LLM calls. Past decisions are logged as JSON Lines and
+compared against actual stock prices after the fact (explicitly a record
+lookup, not a prediction).
 
-## 기술 스택
+## Tech stack
 
-- **백엔드**: FastAPI, Python 3.11(uv로 관리), pykrx, DART Open API, 네이버
-  뉴스 API, Ollama / Anthropic API
-- **macOS 앱**: SwiftUI, Swift Package Manager, NavigationStack
-- **인프라**: launchd로 로그인 시 자동 기동 + 크래시 자동 복구
+- **Backend**: FastAPI, Python 3.11 (managed with uv), pykrx, DART Open API,
+  Naver News API, Ollama / Anthropic API
+- **macOS app**: SwiftUI, Swift Package Manager, NavigationStack
+- **Infrastructure**: launchd for auto-start at login + automatic crash
+  recovery
 
-## 검토했지만 채택하지 않은 것
+## Considered but not adopted
 
-[Kronos](https://github.com/shiyu-coder/Kronos)(K-line 데이터로 학습한
-오픈소스 가격 예측 모델)를 삼성전자로 백테스트했다. "어제 종가가 그대로
-유지된다"는 아무 판단도 없는 기준선보다 7배 부정확했고, 정확도를 떠나서도
-미래 가격을 숫자로 확정 예측하는 방식이라 이 앱의 "사실 계산 / 과거 조회"
-원칙과 맞지 않아 도입하지 않았다.
+Backtested [Kronos](https://github.com/shiyu-coder/Kronos) (an open-source
+price forecasting model trained on K-line data) on Samsung Electronics. It was
+7x less accurate than the naive baseline of "yesterday's closing price stays
+the same" — and setting accuracy aside, its approach of predicting a definite
+future price as a number conflicts with this app's "fact-based calculation /
+historical lookup only" principle, so it wasn't adopted.
 
-## 에셋 라이선스
+## Asset licensing
 
-픽셀아트 캐릭터/가구/타일은 [pixel-agents](https://github.com/pixel-agents-hq/pixel-agents)
-(MIT License)에서 가져왔다. 자세한 출처는
-[macapp/Sources/StockResearchMac/Resources/CREDITS.md](macapp/Sources/StockResearchMac/Resources/CREDITS.md)
-참고.
+The pixel-art character/furniture/tile sprites are sourced from
+[pixel-agents](https://github.com/pixel-agents-hq/pixel-agents) (MIT License).
+See [macapp/Sources/StockResearchMac/Resources/CREDITS.md](macapp/Sources/StockResearchMac/Resources/CREDITS.md)
+for full attribution.
 
-## 라이선스
+## License
 
-이 저장소의 코드는 MIT License. [LICENSE](LICENSE) 참고.
+The code in this repository is under the MIT License. See [LICENSE](LICENSE).
 
-## 면책
+## Disclaimer
 
-이 앱과 이 저장소는 투자자문이 아니다. 모든 지표·AI 판단·과거 패턴 정보는
-참고 자료일 뿐이며, 투자 판단과 그 책임은 사용자 본인에게 있다.
+This app and this repository do not constitute investment advice. All
+indicators, AI decisions, and historical pattern information are for
+reference only — investment decisions, and responsibility for them, rest
+solely with the user.

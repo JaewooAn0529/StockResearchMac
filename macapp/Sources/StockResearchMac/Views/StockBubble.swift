@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 즐겨찾기 종목을 카드로 따로 안 띄우고, 오피스에 있는 캐릭터 머리 위에
-/// 말풍선처럼 붙여서 보여준다 — 배경 장면과 붕 떠 보이지 않게.
+/// Rather than showing favorited stocks as separate cards, this attaches them
+/// above a character's head in the office like a speech bubble — so they don't
+/// feel disconnected from the background scene.
 struct StockBubble: View {
     let result: SearchResult
 
@@ -34,7 +35,7 @@ struct StockBubble: View {
                 .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.white.opacity(0.5), lineWidth: 1))
                 .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
 
-                // 말풍선 꼬리 — 캐릭터를 가리키게 아래로
+                // Speech bubble tail — pointing down at the character
                 Triangle()
                     .fill(.thinMaterial)
                     .frame(width: 10, height: 6)

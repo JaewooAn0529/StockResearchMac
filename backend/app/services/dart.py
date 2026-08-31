@@ -1,15 +1,20 @@
-"""DART 공시 기반 지표 두 가지.
+"""Two indicators based on DART disclosures.
 
-1. 실적발표 캘린더 (지표 #7): DART는 "다음 실적발표일"을 직접 알려주지 않는다.
-   대신 company.json의 결산월(acc_mt)로 자본시장법상 정기공시 법정 제출기한을
-   계산한다 — 분기/반기보고서는 분기 종료 후 45일, 사업보고서는 사업연도 종료
-   후 90일 이내. 그래서 이건 "회사가 발표하겠다고 예고한 날짜"가 아니라
-   "법으로 정해진 마감일 추정치"라는 걸 응답에 명확히 표시한다.
+1. Earnings calendar (indicator #7): DART doesn't directly tell you the "next
+   earnings date." Instead, we use the fiscal year-end month (acc_mt) from
+   company.json to compute the statutory filing deadline for periodic
+   disclosures under the Capital Markets Act — quarterly/semiannual reports
+   are due within 45 days of the period end, and the annual report within 90
+   days of the fiscal year end. So the response makes clear that this is not
+   "the date the company announced it will report," but an "estimated
+   legally mandated deadline."
 
-2. 리스크 체크리스트 (지표 #8): 최근 공시목록 제목에서 보호예수·대량보유·
-   최대주주 관련 키워드를 찾아 배지로 노출한다. DART의 세부 공시유형 코드를
-   완벽히 분류하기보다, 실제 공시 제목을 그대로 보여주고 원문 링크를 붙여서
-   사용자가 직접 확인하게 하는 쪽이 더 정직하다.
+2. Risk checklist (indicator #8): scans recent disclosure titles for keywords
+   related to lock-ups, large shareholding reports, and major shareholders,
+   and surfaces them as badges. Rather than trying to perfectly classify
+   DART's detailed disclosure-type codes, it's more honest to just show the
+   actual disclosure titles as-is with a link to the source, and let the
+   user verify for themselves.
 """
 
 from __future__ import annotations
@@ -25,9 +30,11 @@ from app.services.dart_codes import get_corp_code
 _COMPANY_URL = "https://opendart.fss.or.kr/api/company.json"
 _LIST_URL = "https://opendart.fss.or.kr/api/list.json"
 
-# "특정증권등소유상황보고서"(임원·주요주주 지분 변동)와 단순 "최대주주"는 일상적으로도
-# 자주 나와서 넣으면 경고가 아니라 소음이 된다(삼성전자 기준 180일에 91건). 실제로
-# "위험 신호"라고 부를 만한 보호예수/의무보유 해제와 대량(5%+) 지분 변동만 남긴다.
+# "Report on Status of Specific Securities Ownership" (changes in executive/major
+# shareholder stakes) and a plain "major shareholder" mention show up so routinely
+# that including them would be noise rather than a warning (91 filings in 180 days
+# for Samsung Electronics alone). We keep only things actually worth calling a
+# "risk signal": lock-up/mandatory-holding releases and large (5%+) stake changes.
 _RISK_KEYWORDS = ["보호예수", "의무보유", "대량보유상황보고서"]
 
 
@@ -36,7 +43,7 @@ def _month_end(year: int, month: int) -> date:
 
 
 def _milestones(fy_start: date) -> list[tuple[str, date, int]]:
-    """(공시유형, 분기/사업연도 종료일, 제출기한 일수) 목록."""
+    """List of (disclosure type, quarter/fiscal-year end date, days until filing deadline)."""
     out = []
     for offset, (label, deadline_days) in {
         3: ("1분기보고서", 45),
@@ -63,7 +70,7 @@ def get_earnings_calendar(ticker: str, today: date | None = None) -> dict | None
     if body.get("status") != "000":
         return None
 
-    acc_mt = int(body["acc_mt"])  # 결산월 (예: 12)
+    acc_mt = int(body["acc_mt"])  # fiscal year-end month (e.g. 12)
     fy_start_month = acc_mt % 12 + 1
     today = today or date.today()
 
@@ -106,7 +113,7 @@ def get_risk_flags(ticker: str, lookback_days: int = 180) -> list[dict] | None:
     )
     res.raise_for_status()
     body = res.json()
-    if body.get("status") not in ("000", "013"):  # 013 = 조회된 데이터 없음(정상)
+    if body.get("status") not in ("000", "013"):  # 013 = no data found (normal)
         return None
 
     flags = []

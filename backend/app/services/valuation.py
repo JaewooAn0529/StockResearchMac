@@ -1,7 +1,8 @@
-"""밸류에이션 (지표 #4): 현재 PER/PBR vs 최근 1년 밴드.
+"""Valuation (indicator #4): current PER/PBR vs. the trailing 1-year band.
 
-pykrx의 get_market_fundamental은 적자 기업 등에서 PER/PBR을 0으로 채워 넣는
-경우가 있어(의미 없는 값), 밴드 계산 시 0 이하 값은 제외한다.
+pykrx's get_market_fundamental sometimes fills in PER/PBR as 0 for things like
+loss-making companies (a meaningless value), so we exclude values <= 0 when
+computing the band.
 """
 
 from __future__ import annotations

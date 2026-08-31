@@ -1,11 +1,12 @@
-"""네이버 뉴스 수집 (뉴스/센티먼트 분석가의 입력).
+"""Naver News collection (input for the news/sentiment analyst).
 
-stock-briefing/briefing.py의 today_news를 확장했다. 원본은 "오늘 발행된
-기사"만 최대 2건 받았지만, 여기서는 토론에 쓸 근거가 필요하므로 기간 제한을
-풀고 최신순 N건을 가져온다.
+Extends today_news from stock-briefing/briefing.py. The original fetched at
+most 2 articles, only "articles published today," but here we need supporting
+evidence for the debate, so we drop the date restriction and fetch the N most
+recent articles instead.
 
-NAVER 키가 없으면 조용히 빈 리스트를 반환한다 — 뉴스 없이도 나머지
-에이전트들은 정상 동작해야 한다.
+If the NAVER keys are missing, this silently returns an empty list — the
+other agents should still work fine even without news.
 """
 
 from __future__ import annotations
@@ -47,7 +48,7 @@ def get_news(name: str, limit: int = 10) -> list[dict]:
     out = []
     for item in res.json().get("items", []):
         title = _strip_tags(item["title"])
-        # 종목명이 제목에 없으면 동명이인/무관 기사일 확률이 높다
+        # if the stock name isn't in the title, it's likely an unrelated article about a namesake
         if name[:2] not in title:
             continue
         pub = parsedate_to_datetime(item["pubDate"]).astimezone(KST)

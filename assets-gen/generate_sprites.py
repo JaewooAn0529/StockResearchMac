@@ -1,14 +1,15 @@
-"""오피스 장면용 고품질 픽셀아트 스프라이트 생성.
+"""Generates high-quality pixel-art sprites for the office scene.
 
-파이프라인: SD1.5 픽셀아트 모델로 512px 생성 → 128px 다운샘플 + 색상 양자화로
-픽셀 격자를 또렷하게 정제 → 배경 flood-fill 투명화 → 512px nearest 확대 저장.
+Pipeline: generate at 512px with the SD1.5 pixel-art model -> downsample to 128px
++ color quantization to sharpen the pixel grid -> flood-fill the background
+transparent -> save upscaled back to 512px with nearest-neighbor.
 
-SDXL은 이 맥(M5/MPS)에서 1장에 3~4시간이라 못 쓴다(실측). 512px/50스텝이
-실용적인 최고 품질선으로 약 47초/장.
+SDXL is unusable on this Mac (M5/MPS) since it takes 3-4 hours per image (measured).
+512px/50 steps is the practical quality ceiling, at roughly 47 seconds per image.
 
-캐릭터마다 idle(서 있는) / walk(걷는) 두 포즈를 만들어서 앱에서 프레임을
-번갈아 보여주면 걸어다니는 것처럼 보인다. 같은 시드를 쓰면 두 포즈의 캐릭터
-생김새가 유지된다.
+Each character gets two poses, idle (standing) and walk (walking), so alternating
+frames in the app makes them look like they're walking. Using the same seed keeps
+the character's appearance consistent across both poses.
 """
 
 from collections import deque
@@ -45,15 +46,16 @@ BACKGROUND_PROMPT = (
 
 
 def refine_pixel_art(img: Image.Image, grid: int = 128, colors: int = 48) -> Image.Image:
-    """다운샘플 + 색상 양자화로 픽셀 격자를 또렷하게 만든다."""
+    """Downsamples and color-quantizes the image to sharpen the pixel grid."""
     small = img.resize((grid, grid), Image.LANCZOS)
     small = small.quantize(colors=colors, method=Image.MAXCOVERAGE).convert("RGB")
     return small
 
 
 def make_background_transparent(img: Image.Image) -> Image.Image:
-    """네 모서리에서 flood-fill로 배경만 투명화한다. 캐릭터 내부의 흰색
-    (셔츠 등)은 모서리와 연결돼 있지 않으므로 그대로 남는다."""
+    """Flood-fills from the four corners to make only the background transparent.
+    White areas inside the character (e.g. a shirt) aren't connected to the
+    corners, so they're left untouched."""
     img = img.convert("RGBA")
     w, h = img.size
     px = img.load()
@@ -92,7 +94,7 @@ def main():
     done = 0
 
     for key, desc in CHARACTERS.items():
-        # 같은 시드를 캐릭터별로 고정해서 포즈가 달라도 같은 인물로 보이게 한다
+        # Fix the seed per character so it looks like the same person across poses
         seed = abs(hash(key)) % (2**31)
         for pose_name, pose_desc in POSES.items():
             gen = torch.Generator(device="cpu").manual_seed(seed)
@@ -123,7 +125,7 @@ def main():
         width=768,
         height=448,
     ).images[0]
-    # 배경은 투명화 없이 픽셀 정제만 (가로세로 비율 유지)
+    # Background: pixel refinement only, no transparency (keep aspect ratio)
     bg_small = bg.resize((192, 112), Image.LANCZOS)
     bg_small = bg_small.quantize(colors=64, method=Image.MAXCOVERAGE).convert("RGB")
     bg_small.resize((768, 448), Image.NEAREST).save("sprite_office_background.png")

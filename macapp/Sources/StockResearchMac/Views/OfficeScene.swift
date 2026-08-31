@@ -1,25 +1,26 @@
 import SwiftUI
 
-/// 오피스에서 실제로 걸어다니는 캐릭터 한 명의 상태.
-/// 자기 책상과 순회 지점 사이를 오가면서, 책상에서는 앉아서 일하고
-/// 밖에서는 커피를 마시거나 통화를 한다.
+/// State for a single character actually walking around the office.
+/// It moves back and forth between its own desk and rotating waypoints —
+/// sitting and working at the desk, and drinking coffee or talking on the
+/// phone when out and about.
 @MainActor
 final class OfficeActor: ObservableObject, Identifiable {
     enum Mode {
-        case working    // 책상에 앉아 타이핑
-        case walking    // 이동 중
-        case idling     // 서서 잡담/커피
+        case working    // seated at the desk, typing
+        case walking    // moving
+        case idling     // standing, chatting/coffee
     }
 
     let id: String
     let displayName: String
-    let desk: CGPoint          // 자기 자리 (0~1 정규화)
+    let desk: CGPoint          // its own spot (normalized 0~1)
 
     @Published var position: CGPoint
     @Published var mode: Mode = .working
     @Published var facingLeft = false
-    @Published var animFrame = 0        // 걷기/타이핑 프레임 토글
-    @Published var emote: String?       // 말풍선 아이콘
+    @Published var animFrame = 0        // toggles the walk/type animation frame
+    @Published var emote: String?       // speech-bubble icon
 
     init(id: String, displayName: String, desk: CGPoint) {
         self.id = id
@@ -28,9 +29,9 @@ final class OfficeActor: ObservableObject, Identifiable {
         self.position = desk
     }
 
-    /// 현재 상태에 맞는 스프라이트 프레임 이름.
-    /// 프레임은 pixel-agents(MIT) 스프라이트 시트에서 잘라낸 것 —
-    /// assets-gen/slice_sprites.py 참고.
+    /// The sprite frame name matching the current state.
+    /// Frames are cut from the pixel-agents (MIT) sprite sheet —
+    /// see assets-gen/slice_sprites.py.
     var spriteName: String {
         switch mode {
         case .working:
@@ -43,8 +44,8 @@ final class OfficeActor: ObservableObject, Identifiable {
     }
 }
 
-/// 픽셀아트 오피스. 바닥 타일을 깔고 가구를 배치한 뒤 그 위에서 캐릭터들이
-/// 자기 책상과 휴게 공간 사이를 오간다.
+/// The pixel-art office. Floor tiles are laid, furniture is placed, and on top
+/// of that the characters move between their own desks and the lounge area.
 struct OfficeScene: View {
     let favorites: [SearchResult]
     var showBubbles: Bool = true
@@ -72,8 +73,8 @@ struct OfficeScene: View {
                             let actor = director.actors[idx]
                             StockBubble(result: stock)
                                 .position(
-                                    // 배경이 ignoresSafeArea로 타이틀바 아래까지 깔리므로,
-                                    // 말풍선이 타이틀바에 가려지지 않게 위쪽 여유를 넉넉히 둔다
+                                    // The background extends under the title bar via ignoresSafeArea,
+                                    // so leave generous top clearance so the bubble doesn't get hidden behind the title bar
                                     x: geo.size.width * actor.position.x,
                                     y: max(geo.size.height * actor.position.y - 68, 92)
                                 )
@@ -90,8 +91,9 @@ struct OfficeScene: View {
     }
 }
 
-/// 바닥 타일 + 벽 + 가구로 방을 조립한다. 통짜 배경 이미지 대신 타일을 깔면
-/// 어떤 창 크기에서도 픽셀이 늘어나지 않고 선명하게 유지된다.
+/// Assembles the room from floor tiles + walls + furniture. Using tiles instead
+/// of a single monolithic background image keeps pixels crisp at any window
+/// size instead of stretching.
 struct OfficeRoomBackdrop: View {
     let size: CGSize
 
@@ -101,7 +103,7 @@ struct OfficeRoomBackdrop: View {
         ZStack(alignment: .topLeading) {
             Color(red: 0.14, green: 0.13, blue: 0.17)
 
-            // 바닥 타일
+            // Floor tiles
             let cols = Int(ceil(size.width / tile))
             let rows = Int(ceil(size.height / tile))
             ForEach(0..<max(rows, 1), id: \.self) { r in
@@ -114,9 +116,11 @@ struct OfficeRoomBackdrop: View {
                 }
             }
 
-            // 벽 (상단 띠). wall_wall_0.png는 단일 이미지가 아니라 32x32 타일 8개가
-            // 든 타일셋이라, 통째로 늘려 깔면 줄무늬처럼 깨진다(실제로 겪음).
-            // 그래서 민무늬 벽 타일 하나만 잘라낸 wall_plain.png를 정사각 비율로 반복한다.
+            // Wall (top band). wall_wall_0.png isn't a single image — it's a
+            // tileset containing 8 32x32 tiles, so stretching it as one image
+            // breaks into stripes (learned this the hard way). So instead we
+            // repeat wall_plain.png, a single plain wall tile cut out at a
+            // square aspect ratio.
             ForEach(0..<max(cols, 1), id: \.self) { c in
                 VStack(spacing: 0) {
                     pixelImage("wall_plain")
@@ -131,13 +135,13 @@ struct OfficeRoomBackdrop: View {
                 .offset(x: CGFloat(c) * tile, y: 0)
             }
 
-            // 벽과 바닥 경계에 걸레받이 라인을 넣어 평면이 아니라 방처럼 보이게
+            // Add a baseboard line at the wall/floor boundary so it reads as a room, not a flat plane
             Rectangle()
                 .fill(Color.black.opacity(0.35))
                 .frame(width: size.width, height: 3)
                 .offset(y: tile * 2)
 
-            // 가구 배치 — 책상은 캐릭터 자리와 맞춰둔다
+            // Furniture placement — desks are aligned with the character spots
             furniture("furn_DESK_FRONT", x: 0.10, y: 0.52, w: 96)
             furniture("furn_DESK_FRONT", x: 0.32, y: 0.52, w: 96)
             furniture("furn_DESK_FRONT", x: 0.56, y: 0.52, w: 96)
@@ -154,7 +158,7 @@ struct OfficeRoomBackdrop: View {
             furniture("furn_SOFA_FRONT", x: 0.20, y: 0.30, w: 96)
             furniture("furn_COFFEE", x: 0.30, y: 0.28, w: 32)
 
-            // 켜져 있는 PC — 3프레임을 순환시켜 모니터가 깜빡이게
+            // Powered-on PCs — cycle through 3 frames so the monitors flicker
             TimelineView(.animation(minimumInterval: 0.45)) { timeline in
                 let step = Int(timeline.date.timeIntervalSinceReferenceDate / 0.45) % 3 + 1
                 Group {
@@ -165,7 +169,7 @@ struct OfficeRoomBackdrop: View {
                 }
             }
 
-            // 창문에서 들어오는 햇살이 아주 천천히 밝아졌다 어두워진다
+            // Sunlight coming through the window very slowly brightens and dims
             TimelineView(.animation(minimumInterval: 0.1)) { timeline in
                 let t = timeline.date.timeIntervalSinceReferenceDate
                 LinearGradient(
@@ -219,13 +223,13 @@ private struct ActorSprite: View {
     }
 }
 
-/// 캐릭터들의 하루를 굴리는 루프. 각자 독립 Task로 돌아 서로 다른 타이밍에 움직인다.
+/// The loop that runs the characters' day. Each runs as an independent Task, so they move on different timings.
 @MainActor
 private final class OfficeDirector: ObservableObject {
     @Published private(set) var actors: [OfficeActor] = []
     private var tasks: [Task<Void, Never>] = []
 
-    // 책상 자리 (OfficeRoom의 책상 배치와 맞춤)
+    // Desk spots (matched to the desk layout in OfficeRoom)
     private let desks: [CGPoint] = [
         CGPoint(x: 0.10, y: 0.44), CGPoint(x: 0.32, y: 0.44),
         CGPoint(x: 0.56, y: 0.44), CGPoint(x: 0.80, y: 0.44),
@@ -233,7 +237,7 @@ private final class OfficeDirector: ObservableObject {
         CGPoint(x: 0.56, y: 0.72), CGPoint(x: 0.80, y: 0.72),
     ]
 
-    // 휴게 공간(소파/커피/화이트보드 근처) — 자리를 뜰 때 가는 곳
+    // Lounge spots (near the sofa/coffee/whiteboard) — where they go when leaving their desk
     private let hangouts: [CGPoint] = [
         CGPoint(x: 0.22, y: 0.36), CGPoint(x: 0.31, y: 0.34),
         CGPoint(x: 0.68, y: 0.28), CGPoint(x: 0.46, y: 0.30),
@@ -265,7 +269,7 @@ private final class OfficeDirector: ObservableObject {
     }
 
     private func runLoop(for actor: OfficeActor) async {
-        // 타이핑/걷기 프레임 토글은 계속 돌린다
+        // Keep toggling the typing/walking animation frame continuously
         let animTask = Task { @MainActor in
             while !Task.isCancelled {
                 actor.animFrame = actor.animFrame == 0 ? 1 : 0
@@ -275,19 +279,19 @@ private final class OfficeDirector: ObservableObject {
         defer { animTask.cancel() }
 
         while !Task.isCancelled {
-            // 1) 책상에서 일한다
+            // 1) Work at the desk
             actor.mode = .working
             withAnimation(.spring(response: 0.3)) { actor.emote = "keyboard.fill" }
             try? await Task.sleep(for: .seconds(.random(in: 6...14)))
             withAnimation(.easeOut(duration: 0.3)) { actor.emote = nil }
             guard !Task.isCancelled else { return }
 
-            // 2) 휴게 공간으로 걸어간다
+            // 2) Walk to the lounge area
             let spot = hangouts.randomElement() ?? actor.desk
             await walk(actor, to: spot)
             guard !Task.isCancelled else { return }
 
-            // 3) 잠깐 쉰다 (커피/통화/잡담)
+            // 3) Take a short break (coffee/phone call/chatting)
             actor.mode = .idling
             withAnimation(.spring(response: 0.3)) {
                 actor.emote = ["cup.and.saucer.fill", "phone.fill", "bubble.left.fill", "smoke.fill"].randomElement()
@@ -296,7 +300,7 @@ private final class OfficeDirector: ObservableObject {
             withAnimation(.easeOut(duration: 0.3)) { actor.emote = nil }
             guard !Task.isCancelled else { return }
 
-            // 4) 자기 자리로 돌아간다
+            // 4) Walk back to its own spot
             await walk(actor, to: actor.desk)
         }
     }

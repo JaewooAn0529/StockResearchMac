@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// 지난 토론 판단들과 그 이후 실제 주가 변화.
+/// Past debate decisions and the actual price moves that followed.
 ///
-/// ⚠️ 이건 "이 에이전트가 잘 맞힌다"는 성능 보장이나 미래 예측이 아니라,
-/// "그때 이렇게 판단했고 이후 주가는 이렇게 움직였다"는 사후 기록 조회다.
-/// 화면 문구도 전부 과거형으로만 쓴다.
+/// ⚠️ This is not a performance guarantee claiming "this agent gets it right,"
+/// nor a future prediction — it's a historical record lookup: "here's what was
+/// decided at that time, and here's how the price moved afterward." All screen
+/// copy is written strictly in the past tense accordingly.
 struct DecisionHistoryView: View {
     @State private var state: LoadState<DecisionHistoryResponse> = .loading
 
@@ -73,7 +74,7 @@ struct DecisionHistoryView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // 판단 이후 주가가 어떻게 움직였는지 (사실 조회일 뿐, 성능 평가가 아님)
+            // How the price moved after the decision (just a factual lookup, not a performance evaluation)
             switch r.status {
             case "ready":
                 if let then = r.priceAtDecision, let now = r.priceNow, let pct = r.returnPct {

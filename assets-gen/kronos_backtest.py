@@ -1,14 +1,17 @@
-"""Kronos(K-line 예측 모델)를 한국 주식에 zero-shot으로 써도 되는지 실측한다.
+"""Empirically tests whether Kronos (a K-line forecasting model) can be used
+zero-shot on Korean stocks.
 
-⚠️ 이건 도입 결정을 위한 검증이지, 앱에 넣기로 한 게 아니다. Kronos는 미래
-가격을 숫자로 예측하는 모델이라 지금 앱이 지켜온 "사실 계산/과거 조회" 원칙과
-충돌한다. 최소한 "이 모델이 한국 주식에서 실제로 맞기는 하는지"는 확인하고
-판단해야 한다.
+⚠️ This is validation for an adoption decision, not a commitment to add it to the
+app. Kronos predicts future prices as numbers, which conflicts with the
+"fact-based calculation / historical lookup only" principle the app has followed
+so far. At minimum, we need to verify whether this model is actually accurate on
+Korean stocks before deciding.
 
-방법: 과거 시점을 잘라서 그 이전 데이터만 모델에 주고, 이후 N일을 예측시킨 뒤
-실제 값과 대조한다(lookahead 없음). 단순 비교군으로 "마지막 종가가 그대로
-유지된다"(naive/persistence)를 같이 계산한다 — 예측 모델이 이것보다 못하면
-쓸 이유가 없다.
+Method: cut history off at a past point in time, feed the model only the data
+before that cutoff, have it predict the next N days, then compare against the
+actual values (no lookahead). As a simple baseline, we also compute "the last
+close price stays the same" (naive/persistence) — if the prediction model does
+worse than this, there's no reason to use it.
 """
 
 import sys
@@ -26,9 +29,9 @@ load_dotenv("/Users/jaewooan/AIstocktrading/stock-research-app/backend/.env")
 from model import Kronos, KronosPredictor, KronosTokenizer  # noqa: E402
 from pykrx import stock  # noqa: E402
 
-TICKER = "005930"  # 삼성전자
-LOOKBACK = 90      # 정규화 구간이 길면 추세 때문에 예측이 구간평균으로 끌려간다(실측)
-PRED_LEN = 5       # 예측할 일수
+TICKER = "005930"  # Samsung Electronics
+LOOKBACK = 90      # If the normalization window is too long, the trend pulls the prediction toward the window average (measured)
+PRED_LEN = 5       # Number of days to predict
 
 
 def main():
@@ -41,7 +44,7 @@ def main():
         return
     print(f"전체 데이터: {len(df)}행", flush=True)
 
-    # Kronos가 기대하는 컬럼명으로 변환
+    # Convert to the column names Kronos expects
     k = pd.DataFrame({
         "open": df["시가"].astype(float),
         "high": df["고가"].astype(float),
@@ -58,7 +61,7 @@ def main():
     predictor = KronosPredictor(model, tokenizer, device=device, max_context=512)
     print(f"모델 로드: {time.time() - t0:.1f}초", flush=True)
 
-    # 최근 3개 시점에서 각각 백테스트 (한 번만 하면 운으로 맞을 수 있다)
+    # Backtest at 3 recent points in time separately (a single run could get lucky)
     results = []
     for offset in (60, 40, 20):
         cut = len(k) - offset
@@ -83,7 +86,7 @@ def main():
 
         pred_err = abs(pred_close - real_close) / real_close * 100
         naive_err = abs(last_close - real_close) / real_close * 100
-        # 방향(오름/내림)을 맞췄는지 — 가격 수치보다 이게 실용적으로 중요하다
+        # Whether the direction (up/down) was correct — more practically important than the exact price
         pred_dir = "상승" if pred_close > last_close else "하락"
         real_dir = "상승" if real_close > last_close else "하락"
 

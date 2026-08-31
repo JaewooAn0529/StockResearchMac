@@ -1,8 +1,9 @@
-"""변동성/베타 (지표 #5): 시장 대비 이 종목이 얼마나 출렁이는지.
+"""Volatility/beta (indicator #5): how much this stock swings relative to the market.
 
-베타는 종목 일간수익률을 해당 종목이 속한 시장 지수(KOSPI/KOSDAQ) 일간수익률에
-회귀했을 때의 기울기(공분산/지수분산). 연율화 변동성은 일간수익률 표준편차에
-sqrt(252)를 곱해 연 단위로 환산한 값(%).
+Beta is the slope from regressing the stock's daily returns against the daily
+returns of the market index it belongs to (KOSPI/KOSDAQ) — i.e. covariance
+divided by index variance. Annualized volatility is the standard deviation of
+daily returns multiplied by sqrt(252), converted to a yearly value (%).
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ def get_volatility_beta(ticker: str, days: int = 180) -> dict | None:
     index_ret = index_df["종가"].pct_change().dropna()
     aligned = pd.concat([stock_ret, index_ret], axis=1, join="inner")
     aligned.columns = ["stock", "index"]
-    if len(aligned) < 20:  # 표본이 너무 적으면 베타가 무의미
+    if len(aligned) < 20:  # too few samples makes beta meaningless
         return None
 
     index_var = aligned["index"].var()

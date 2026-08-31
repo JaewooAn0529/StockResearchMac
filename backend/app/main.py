@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
-# pykrx는 import되는 순간 KRX_ID/KRX_PW 환경변수로 로그인을 시도하므로,
-# .env는 pykrx를 (간접적으로라도) import하는 그 어떤 구문보다도 먼저 로드돼야 한다.
+# pykrx tries to log in using the KRX_ID/KRX_PW environment variables the moment it's
+# imported, so .env must be loaded before any statement that imports pykrx (even indirectly).
 load_dotenv()
 
 from fastapi import FastAPI  # noqa: E402

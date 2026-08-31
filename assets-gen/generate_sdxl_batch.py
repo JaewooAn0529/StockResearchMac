@@ -1,7 +1,8 @@
-"""SDXL + pixel-art-xl LoRA로 고품질 캐릭터를 뽑는다. 캐릭터마다 base 포즈를
-txt2img로 만들고, 그 이미지를 img2img 시드로 삼아 걷는/제스처 포즈를 하나 더
-뽑는다 — 완전히 새로 생성하면 프레임마다 캐릭터 생김새가 달라지는데, img2img로
-base에서 파생시키면 같은 캐릭터처럼 유지된다.
+"""Generates high-quality characters with SDXL + the pixel-art-xl LoRA. For each
+character, a base pose is created with txt2img, then that image is used as an
+img2img seed to produce one more walking/gesture pose — generating each frame
+fully from scratch makes the character's appearance drift between frames, but
+deriving it from the base via img2img keeps it looking like the same character.
 """
 
 import torch

@@ -1,89 +1,115 @@
 # stock-research-app / backend
 
-개인용 주식 리서치 도구의 백엔드. FastAPI로 pykrx/DART/네이버 데이터를 감싸서
-7개 지표를 제공하고, 로컬 LLM(Ollama)으로 멀티에이전트 토론(BUY/SELL/HOLD)까지
-낸다. macOS 앱(`../macapp`)이 이 서버(localhost:8000)를 호출한다.
+Backend for a personal stock research tool. Wraps pykrx/DART/Naver data with
+FastAPI to provide 7 indicators, plus a local LLM (Ollama) that runs a
+multi-agent debate to reach a BUY/SELL/HOLD decision. The macOS app
+(`../macapp`) calls this server at localhost:8000.
 
-## 실행 방법
+## How to run
 
-pykrx>=1.2.x는 Python 3.10+가 필요하다. 이 머신 기본 Python은 3.9라
-[uv](https://astral.sh/uv)로 3.11을 따로 설치해 venv를 만든다 (sudo/brew 불필요).
+pykrx>=1.2.x requires Python 3.10+. Since this machine's default Python is
+3.9, we install 3.11 separately with [uv](https://astral.sh/uv) and build the
+venv from it (no sudo/brew required).
 
 ```bash
 cd backend
-curl -LsSf https://astral.sh/uv/install.sh | sh   # 최초 1회만
-uv python install 3.11                             # 최초 1회만
+curl -LsSf https://astral.sh/uv/install.sh | sh   # once only
+uv python install 3.11                             # once only
 uv venv --python 3.11 venv
 source venv/bin/activate
 uv pip install -r requirements.txt
-cp .env.example .env   # KRX_ID/KRX_PW, DART_API_KEY 채우기 (아래 참고)
+cp .env.example .env   # fill in KRX_ID/KRX_PW, DART_API_KEY (see below)
 uvicorn app.main:app --reload
 ```
 
-서버는 기본적으로 http://localhost:8000 에서 뜬다.
+The server runs at http://localhost:8000 by default.
 
-### KRX_ID / KRX_PW가 필요한 이유
+### Why KRX_ID / KRX_PW are needed
 
-pykrx는 **import되는 순간** `KRX_ID`/`KRX_PW` 환경변수로 data.krx.co.kr에 로그인을
-시도하고, 성공한 세션으로 이후 모든 요청을 보낸다. 로그인 없이도 개별 종목
-시세(`/price`)는 되지만, 종목 전체 목록(`/search`)과 수급 데이터(`/flows`)는
-로그인 세션이 없으면 막힌다(400 응답). stock-briefing 프로젝트의 GitHub Actions
-Secrets에 이미 등록된 값과 동일한 계정을 쓰면 된다.
+The moment pykrx **is imported**, it attempts to log in to data.krx.co.kr
+using the `KRX_ID`/`KRX_PW` environment variables, and sends every subsequent
+request through that session if it succeeds. Individual stock prices
+(`/price`) work even without logging in, but the full ticker list (`/search`)
+and flow data (`/flows`) are blocked (400 response) without a login session.
+The same account already registered in the stock-briefing project's GitHub
+Actions Secrets can be reused here.
 
-`.env`는 pykrx를 (간접적으로라도) import하는 어떤 코드보다도 먼저 로드되어야
-해서, `app/main.py` 맨 위에서 다른 import보다 먼저 `load_dotenv()`를 호출한다 —
-순서를 바꾸면 로그인이 조용히 실패한다.
+`.env` needs to load before any code that imports pykrx (even indirectly), so
+`load_dotenv()` is called at the very top of `app/main.py`, ahead of every
+other import — reordering it makes the login fail silently.
 
-### DART_API_KEY가 필요한 이유
+### Why DART_API_KEY is needed
 
-`/earnings-calendar`, `/risk-flags`가 DART Open API(opendart.fss.or.kr, 무료
-가입)를 쓴다. 종목코드→DART 고유번호 매핑을 처음 요청할 때 한 번 내려받아
-캐싱한다(약 3.6MB, ~1.2초).
+`/earnings-calendar` and `/risk-flags` use the DART Open API
+(opendart.fss.or.kr, free registration). The ticker → DART corporate-code
+mapping is downloaded and cached the first time it's requested (about 3.6MB,
+~1.2 seconds).
 
-### 멀티에이전트 토론(`/analysis/{ticker}/debate`) — Ollama 로컬 실행
+### Multi-agent debate (`/analysis/{ticker}/debate`) — running Ollama locally
 
-기본은 `LLM_PROVIDER=ollama`(무료, 로컬)다. 클라우드 API 비용 없이 쓰려면:
+The default is `LLM_PROVIDER=ollama` (free, local). To use it with no cloud
+API cost:
 
 ```bash
-# ollama 앱 설치 후
+# after installing the ollama app
 ollama pull qwen2.5:7b-instruct
 ```
 
-`.env`의 `LLM_PROVIDER=anthropic`로 바꾸고 `ANTHROPIC_API_KEY`를 채우면
-Claude API(유료)로 전환된다 — `ANTHROPIC_MODEL`/`ANTHROPIC_EFFORT`도 같이 설정.
+Switching `.env`'s `LLM_PROVIDER` to `anthropic` and filling in
+`ANTHROPIC_API_KEY` switches to the Claude API (paid) — also set
+`ANTHROPIC_MODEL`/`ANTHROPIC_EFFORT`.
 
-Qwen2.5는 응답이 길어지면 중국어로 드리프트하는 경우가 실측됐다(`app/agents/client.py`
-참고) — 시스템 프롬프트에 언어 강제 문구를 추가하고, 한자가 섞여 나오면 자동 재시도하고,
-`max_tokens`를 실제 필요한 분량으로 타이트하게 잡아서 대응했다.
+We observed Qwen2.5 drifting into Chinese as its responses get longer (see
+`app/agents/client.py`) — addressed by adding a language-enforcement
+instruction to the system prompt, automatically retrying whenever Chinese
+characters appear, and setting `max_tokens` tightly to the amount actually
+needed.
 
-## 엔드포인트
+## Endpoints
 
-- `GET /stocks/search?q=` — 종목명/티커 검색 (KIND 상장법인목록 기반, 로그인 불필요)
-- `GET /stocks/{ticker}/price` — 현재가 + 최근 90일 일봉 OHLCV
-- `GET /stocks/{ticker}/flows` — 외국인/기관 순매수 추이 (최근 90일, KRX 로그인 필요)
-- `GET /stocks/{ticker}/valuation` — PER/PBR 현재값 + 최근 1년 밴드(min/median/max), KRX 로그인 필요
-- `GET /stocks/{ticker}/consensus` — 증권사 컨센서스 투자의견·목표주가 (네이버금융/에프앤가이드 인용,
-  자체 분석 아님 — `source` 필드로 출처 명시. 커버리지 없는 종목은 404)
-- `GET /stocks/{ticker}/technical` — MA20/MA60 이격도, 20일 평균 대비 거래량 배율
-- `GET /stocks/{ticker}/volatility` — 베타(KOSPI/KOSDAQ 지수 대비) + 연율화 변동성
-- `GET /stocks/{ticker}/peers` — 동종업계(KIND 업종 분류) 종목들과 PER/PBR 비교. 종목 5개 조회하느라
-  다소 느림(~9초) — 필요하면 나중에 캐싱 추가
-- `GET /stocks/{ticker}/earnings-calendar` — 다음 정기공시 법정 제출기한 D-day
-  (회사가 예고한 실적발표일이 아니라 자본시장법상 마감일 추정치 — `note` 필드에 명시)
-- `GET /stocks/{ticker}/risk-flags` — 최근 180일 보호예수/의무보유/대량보유(5%+) 관련 공시.
-  임원·주요주주 소유상황보고서처럼 일상적으로 나오는 유형은 소음이라 제외했다
-- `GET /stocks/{ticker}/news` — 관련 뉴스 (제목+설명+링크, 네이버 뉴스 API)
-- `GET /stocks/{ticker}/recovery-history?buy_price=` — **미래 예측 아님, 과거 사실 조회.**
-  매수가 대비 지금과 비슷한 낙폭이었던 과거 사례들이 이전 고점을 회복하기까지 걸린
-  일수의 평균/중앙값. 매수가보다 지금이 높거나 같으면 `applicable=false`(해당 없음),
-  유사 사례가 2건 미만이면 `sufficient_sample=false`(통계 자체를 안 냄). `summary`
-  문장은 반드시 과거형("~걸렸습니다")으로만 쓰고, 프론트는 이 문장을 그대로 표시만
-  한다 — "다음에도 며칠 걸릴 것이다" 식 표현은 여기서도 프론트에서도 금지
-- `POST /analysis/{ticker}/debate` — 4개 분석가(펀더멘털/뉴스/기술적/수급) → bull/bear
-  토론(기본 2라운드) → 트레이더 BUY/SELL/HOLD → 리스크 매니저 approve/revise/reject.
-  호출 10회가 순차로 도는 구조라 로컬 Ollama 기준 약 2분 걸린다
+- `GET /stocks/search?q=` — search by stock name/ticker (based on the KIND
+  listed-company list, no login required)
+- `GET /stocks/{ticker}/price` — current price + daily OHLCV for the last 90
+  days
+- `GET /stocks/{ticker}/flows` — foreign/institutional net buying trend (last
+  90 days, requires KRX login)
+- `GET /stocks/{ticker}/valuation` — current PER/PBR + 1-year band
+  (min/median/max), requires KRX login
+- `GET /stocks/{ticker}/consensus` — brokerage consensus rating and target
+  price (quoted from Naver Finance/FnGuide, not our own analysis — the source
+  is stated in the `source` field. Returns 404 for tickers without coverage)
+- `GET /stocks/{ticker}/technical` — MA20/MA60 deviation, volume ratio versus
+  the 20-day average
+- `GET /stocks/{ticker}/volatility` — beta (relative to the KOSPI/KOSDAQ
+  index) + annualized volatility
+- `GET /stocks/{ticker}/peers` — PER/PBR comparison against peers (by KIND
+  industry classification). Somewhat slow (~9s) since it queries 5 stocks —
+  add caching later if needed
+- `GET /stocks/{ticker}/earnings-calendar` — D-day to the statutory filing
+  deadline for the next regular disclosure (an estimate of the Capital
+  Markets Act deadline, not the company's announced earnings date — stated in
+  the `note` field)
+- `GET /stocks/{ticker}/risk-flags` — lock-up/mandatory-holding/large-holding
+  (5%+) disclosures from the last 180 days. Routine filing types, such as
+  executive/major-shareholder ownership reports, are excluded as noise
+- `GET /stocks/{ticker}/news` — related news (title + description + link,
+  Naver News API)
+- `GET /stocks/{ticker}/recovery-history?buy_price=` — **not a future
+  prediction, a historical fact lookup.** The average/median number of days
+  it took past cases with a similar drawdown from the buy price to recover to
+  their prior high. Returns `applicable=false` (not applicable) if the
+  current price is higher than or equal to the buy price, and
+  `sufficient_sample=false` (no statistics computed) if there are fewer than
+  2 similar cases. The `summary` sentence is always phrased in the past tense
+  ("it took ... days"), and the frontend only displays this sentence
+  verbatim — phrasing like "it will take a few days next time" is prohibited
+  both here and on the frontend
+- `POST /analysis/{ticker}/debate` — 4 analysts (fundamentals/news/
+  technical/flow) → bull/bear debate (2 rounds by default) → trader
+  BUY/SELL/HOLD → risk manager approve/revise/reject. Since 10 calls run
+  sequentially, this takes about 2 minutes with local Ollama
 
-## 확인
+## Verifying
 
 ```bash
 curl "localhost:8000/stocks/search?q=LG에너지솔루션"

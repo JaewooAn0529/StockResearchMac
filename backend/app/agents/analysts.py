@@ -1,12 +1,14 @@
-"""분석가 팀 (TradingAgents의 Analyst Team).
+"""Analyst team (the Analyst Team from the TradingAgents paper).
 
-원 논문은 Fundamentals / Sentiment / News / Technical 네 명을 두는데,
-Sentiment 분석가는 Reddit·StockTwits 기반이라 한국 시장에 대응물이 없다.
-그 자리를 외국인·기관 수급 분석가로 바꿨다 — 한국 시장에서 수급은 미국의
-리테일 센티먼트와 비슷한 위치의 신호이고, 조작 가능성이 낮다.
+The original paper has four analysts: Fundamentals / Sentiment / News / Technical.
+The Sentiment analyst is based on Reddit/StockTwits, which has no equivalent in the
+Korean market. We replaced that slot with a foreign/institutional flow analyst —
+in the Korean market, flow data occupies a signal position similar to U.S. retail
+sentiment, and it's harder to manipulate.
 
-네 명은 서로의 의견을 보지 않는다. 각자 자기 데이터만 보고 독립적으로
-판단해야 이후 토론에서 관점이 실제로 갈린다.
+The four analysts don't see each other's opinions. Each must judge independently
+from only their own data, so that perspectives actually diverge in the debate
+that follows.
 """
 
 from __future__ import annotations
@@ -69,12 +71,13 @@ def _slice(name: str, data: dict) -> str:
 
 
 def run_analysts(name: str, ticker: str, data: dict) -> dict[str, str]:
-    """네 분석가를 병렬로 실행한다. 순차 실행하면 응답이 4배 느려진다."""
+    """Runs the four analysts in parallel. Running them sequentially would make the response 4x slower."""
 
     def one(key: str) -> tuple[str, str]:
         prompt = f"종목: {name} ({ticker})\n\n{_slice(key, data)}"
-        # 4~6문장 지시인데 max_tokens를 너무 크게 주면 로컬 모델이 필요 이상으로
-        # 길게 뽑다가 후반부에서 언어가 깨지는 경우가 있어(Qwen2.5 실측) 타이트하게 잡는다
+        # The instruction asks for 4-6 sentences, but if max_tokens is too generous the
+        # local model tends to over-generate and the language breaks down toward the end
+        # (observed with Qwen2.5), so we keep this tight.
         return key, ask(_ANALYSTS[key], prompt, max_tokens=700)
 
     with ThreadPoolExecutor(max_workers=4) as pool:

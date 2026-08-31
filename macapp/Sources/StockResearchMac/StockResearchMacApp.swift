@@ -1,9 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// `swift run`으로 띄운 프로세스는 제대로 된 .app 번들(더블클릭 실행)이 아니라서
-/// 창은 뜨는데 키보드 포커스를 자동으로 못 가져온다 — 검색창에 타이핑이 안 되는
-/// 증상이 바로 이것. 명시적으로 activate를 호출해서 강제로 최전면·포커스를 가져온다.
+/// A process launched via `swift run` isn't a proper .app bundle (double-click
+/// launched), so the window appears but doesn't automatically grab keyboard
+/// focus — that's exactly why typing into the search field doesn't work. We
+/// explicitly call activate to force it to the front and grab focus.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)

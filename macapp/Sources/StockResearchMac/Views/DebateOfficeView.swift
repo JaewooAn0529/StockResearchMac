@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// 토론 결과를 받은 뒤(백엔드는 한 번에 다 준다) 8명이 순서대로 "말하는" 것처럼
-/// 비주얼노벨 스타일로 재생(연출)한다. 로컬 픽셀아트 SD 모델로 만든 캐릭터/배경을
-/// 쓴다 — assets-gen/generate_batch.py 참고. 진짜 실시간 스트리밍이 아니라
-/// "가상으로" 순서를 재현하는 연출이라는 걸 전제로 한다.
+/// After the debate result arrives (the backend sends it all at once), this plays
+/// it back visual-novel style, as if the 8 participants were "speaking" in turn.
+/// Characters/backgrounds are made with a local pixel-art SD model — see
+/// assets-gen/generate_batch.py. This is staged: not real-time streaming, but a
+/// dramatization that reconstructs the turn order "as if" it were live.
 private struct Turn {
     let key: String
     let name: String
@@ -48,8 +49,8 @@ struct DebateOfficeView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
-                // 홈 화면과 같은 타일 기반 오피스를 배경으로 재사용한다
-                // (통짜 배경 이미지는 크기가 바뀌면 픽셀이 늘어나서 안 쓴다)
+                // Reuse the same tile-based office as the home screen for the background
+                // (a single monolithic background image isn't used because its pixels stretch when the size changes)
                 GeometryReader { geo in
                     OfficeRoomBackdrop(size: geo.size)
                 }
@@ -72,8 +73,9 @@ struct DebateOfficeView: View {
         }
     }
 
-    /// 전신 스프라이트를 오피스 바닥에 세워둔 것처럼 늘어놓고, 말하는 차례인
-    /// 캐릭터만 크게 + 위아래로 통통 튀게 해서 "지금 이 사람이 말한다"를 보여준다.
+    /// Lines up full-body sprites as if standing on the office floor, and makes
+    /// only the currently speaking character bigger and bounce up and down to
+    /// show "this person is talking right now."
     private var castRow: some View {
         TimelineView(.animation) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate
@@ -129,7 +131,7 @@ struct DebateOfficeView: View {
             }
             Text(turn?.text ?? "")
                 .font(.callout)
-                .id(turnIndex)  // 대사 바뀔 때 트랜지션이 새로 타게
+                .id(turnIndex)  // so the transition re-triggers whenever the dialogue changes
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.25), value: turnIndex)
                 .fixedSize(horizontal: false, vertical: true)
@@ -145,7 +147,7 @@ struct DebateOfficeView: View {
         for i in turns.indices {
             if Task.isCancelled { return }
             turnIndex = i
-            // 대사 길이에 비례해서 머무는 시간을 주되, 너무 길게/짧게 가진 않게 범위를 둔다
+            // Give dwell time proportional to the dialogue length, but clamp it so it's never too long or too short
             let seconds = min(max(Double(turns[i].text.count) / 28.0, 2.2), 6.0)
             try? await Task.sleep(for: .seconds(seconds))
         }

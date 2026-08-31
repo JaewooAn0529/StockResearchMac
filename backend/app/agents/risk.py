@@ -1,8 +1,9 @@
-"""리스크 매니저 (TradingAgents의 Risk Management 층).
+"""Risk manager (the Risk Management layer from the TradingAgents paper).
 
-트레이더 결정을 승인/반려한다. 트레이더와 같은 데이터를 보지만 역할이 다르다 —
-"이 결정이 맞는가"가 아니라 "이 결정이 감당 가능한가"를 본다. 별도 층으로 두는
-이유는, 결정자 자신에게 자기 결정을 재검토시키면 대체로 자기 확증에 그치기 때문이다.
+Approves or rejects the trader's decision. It looks at the same data as the trader
+but plays a different role — not "is this decision right" but "is this decision
+survivable." It's kept as a separate layer because having the decision-maker
+re-review their own decision tends to just produce self-confirmation.
 """
 
 from __future__ import annotations

@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// 내 포지션 현황판 — 매수가/매수일 입력받아 현재가 대비 수익률을 보여준다.
-/// "현재가 - 매수가"라는 순수 사실 계산이지, 앞으로 오를지 내릴지를
-/// 판단하거나 예측하는 게 아니다.
+/// My position status board — takes the buy price/date and shows the return
+/// against the current price. This is a plain factual calculation of "current
+/// price minus buy price," not a judgment or prediction of whether it will
+/// rise or fall going forward.
 struct PositionCard: View {
     let ticker: String
     let currentPrice: Int?
@@ -89,8 +90,9 @@ struct PositionCard: View {
     }
 }
 
-/// 과거 유사 하락→회복 통계 카드. 매수가 대비 현재 하락 중일 때만
-/// StockDetailView가 이 뷰를 조건부로 붙인다 — 상승 중이면 아예 안 보인다.
+/// Card showing statistics on similar past drop-and-recovery episodes.
+/// StockDetailView attaches this view only conditionally, when the price is
+/// currently below the buy price — it isn't shown at all while it's up.
 struct RecoveryHistoryCard: View {
     let ticker: String
     let buyPrice: Double

@@ -1,8 +1,9 @@
-"""동종업계 비교 (지표 #8): 같은 업종 종목들과 PER/PBR 나란히 비교.
+"""Peer comparison (indicator #8): compares PER/PBR side by side against stocks in the same industry.
 
-업종 분류는 KIND 상장법인목록의 "업종" 컬럼을 그대로 쓴다(KRX 공식 업종
-중분류가 아니라 KIND가 부여한 표시용 업종명이라, 세분류가 정교하진 않지만
-동종업계 대략적인 비교에는 충분하다).
+Industry classification uses the "industry" column from KIND's listed-company
+list as-is (this is a display-oriented industry label assigned by KIND, not
+the official KRX industry sub-classification, so it isn't finely granular —
+but it's good enough for a rough peer comparison).
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ def get_peer_comparison(ticker: str, limit: int = 5) -> dict | None:
                 "per": v["per"], "pbr": v["pbr"],
             })
 
-    if len(rows) < 2:  # 비교 대상이 자기 자신뿐이면 의미 없음
+    if len(rows) < 2:  # meaningless if the only entry is the stock itself
         return None
 
     return {"industry": entry["industry"], "peers": rows}

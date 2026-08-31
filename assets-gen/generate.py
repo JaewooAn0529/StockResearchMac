@@ -1,5 +1,5 @@
-"""로컬 Stable Diffusion으로 픽셀아트 캐릭터/배경을 생성한다.
-Apple Silicon MPS 가속 사용. 무료, 크레딧 불필요 — Ollama와 같은 패턴.
+"""Generates pixel-art characters/backgrounds using local Stable Diffusion.
+Uses Apple Silicon MPS acceleration. Free, no credits needed — same pattern as Ollama.
 """
 
 import sys
@@ -8,8 +8,8 @@ import torch
 from diffusers import StableDiffusionPipeline
 
 MODEL_CANDIDATES = [
-    "kohbanye/pixel-art-style",  # SD1.5 픽셀아트 파인튜닝 (있으면 이걸 우선 사용)
-    "sd-legacy/stable-diffusion-v1-5",  # 폴백: 범용 모델 + 프롬프트로 픽셀아트 유도
+    "kohbanye/pixel-art-style",  # SD1.5 pixel-art fine-tune (prefer this one if available)
+    "sd-legacy/stable-diffusion-v1-5",  # Fallback: general-purpose model + prompt-guided pixel art
 ]
 
 

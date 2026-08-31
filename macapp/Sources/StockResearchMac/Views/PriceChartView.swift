@@ -1,8 +1,9 @@
 import Charts
 import SwiftUI
 
-/// 종가 라인 + 거래량 바. 캔들스틱은 Swift Charts에 기본 제공이 안 돼(RectangleMark로
-/// 직접 만들어야 함) 이번 패스는 라인으로 간다.
+/// Closing-price line + volume bars. Swift Charts doesn't provide candlesticks
+/// out of the box (you'd have to build them yourself with RectangleMark), so
+/// this pass goes with a line chart instead.
 struct PriceChartView: View {
     let ohlcv: [OHLCVPoint]
 
@@ -21,8 +22,9 @@ struct PriceChartView: View {
         }
     }
 
-    /// 조회 기간 시작 대비 상승/하락으로 차트 색을 정한다 — 카드/배지의 등락률
-    /// 색과 같은 규칙(빨강=상승/파랑=하락)을 차트에도 그대로 적용.
+    /// Decides the chart color based on whether it's up or down versus the
+    /// start of the queried period — applies the same rule to the chart as
+    /// the change-percent color used on cards/badges (red = up, blue = down).
     private var trendColor: Color {
         guard let first = points.first, let last = points.last else { return Theme.accent }
         return Theme.changeColor(Double(last.close - first.close))

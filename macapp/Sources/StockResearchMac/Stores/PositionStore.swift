@@ -1,7 +1,8 @@
 import Foundation
 
-/// 사용자가 입력한 매수가/매수일. 순수 사용자 입력값이라 서버 계산이 필요
-/// 없고(수익률은 현재가 - 매수가라는 단순 사실 계산), 클라이언트에만 저장한다.
+/// The buy price/date the user entered. Since this is purely user input, no
+/// server-side calculation is needed (return is just current price minus buy
+/// price, a simple factual calculation), so it's stored client-side only.
 struct Position: Codable, Equatable {
     var buyPrice: Double
     var buyDate: Date

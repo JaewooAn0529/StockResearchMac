@@ -1,11 +1,12 @@
 import Foundation
 
-/// 즐겨찾기 종목을 UserDefaults에 저장한다. 개인용 로컬 도구라 서버 동기화나
-/// SwiftData 같은 무거운 저장소는 과하다.
+/// Persists favorited stocks to UserDefaults. This is a personal local tool, so
+/// server sync or a heavier store like SwiftData would be overkill.
 ///
-/// 티커만 저장하면 홈 화면 카드를 그릴 때마다 이름/시장구분을 다시 조회해야
-/// 해서, 즐겨찾기에 넣는 시점(검색 결과나 종목상세 화면)에 이미 들고 있는
-/// SearchResult를 그대로 저장해둔다.
+/// If we only stored the ticker, we'd have to re-fetch the name/market every
+/// time a home screen card is rendered, so instead we save the SearchResult
+/// we already have on hand at the moment it's favorited (from the search
+/// results or the stock detail screen).
 @MainActor
 final class FavoritesStore: ObservableObject {
     @Published private(set) var items: [SearchResult]

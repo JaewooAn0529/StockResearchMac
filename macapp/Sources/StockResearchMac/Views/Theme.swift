@@ -1,14 +1,15 @@
 import SwiftUI
 
-/// 앱 전체에서 재사용하는 색/카드 스타일. 등락률 빨강/파랑(국내 증시 관례)만
-/// 고정이고, 나머지 강조색은 인디고 하나로 통일해서 지표 카드가 여러 색으로
-/// 산만해지지 않게 한다.
+/// Colors/card styles reused throughout the app. Only the change-percent
+/// red/blue (a Korean stock market convention) is fixed; every other accent
+/// color is unified to a single indigo so the indicator cards don't feel
+/// cluttered with too many colors.
 enum Theme {
     static let accent = Color.indigo
     static func changeColor(_ pct: Double) -> Color { pct >= 0 ? .red : .blue }
 }
 
-/// 그림자+테두리가 있는 카드. 기존엔 배경색 opacity만 줘서 화면이 밋밋했다.
+/// A card with a shadow + border. It used to just apply background-color opacity, which made the screen feel flat.
 struct CardBackground: ViewModifier {
     var tinted: Bool = false
 
@@ -34,7 +35,7 @@ extension View {
     }
 }
 
-/// 등락률을 색이 있는 알약 배지로 — 텍스트 색만 바꾸는 것보다 한눈에 들어온다.
+/// Shows the change percent as a colored pill badge — reads at a glance better than just changing text color.
 struct ChangeBadge: View {
     let pct: Double
 
@@ -50,8 +51,7 @@ struct ChangeBadge: View {
     }
 }
 
-/// 카드 그리드 위에 붙는 섹션 타이틀. 아이콘을 달아서 지표 카드들이 서로
-/// 구분돼 보이게 한다.
+/// A section title placed above a card grid. Adds an icon so the indicator cards read as visually distinct groups.
 struct SectionHeader: View {
     let title: String
     var icon: String? = nil
@@ -66,19 +66,19 @@ struct SectionHeader: View {
     }
 }
 
-// MARK: - 픽셀아트 캐릭터 (DebateOfficeView, OfficeAmbientView가 공유)
+// MARK: - Pixel-art characters (shared by DebateOfficeView, OfficeAmbientView)
 
-/// Bundle.module의 Resources/에서 로컬 SD로 만든 픽셀아트 PNG를 읽어온다.
-/// assets-gen/generate_batch.py 참고.
+/// Reads pixel-art PNGs made with a local SD model from Resources/ in Bundle.module.
+/// See assets-gen/generate_batch.py.
 func pixelImage(_ name: String) -> Image {
     if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Resources"),
        let nsImage = NSImage(contentsOf: url) {
         return Image(nsImage: nsImage)
     }
-    // 에셋 이름 오타를 조용히 넘기면 화면에 사람 아이콘이 덩그러니 남아 원인을
-    // 찾기 어렵다(실제로 furn_SOFA → furn_SOFA_FRONT 오타로 겪음).
-    // 개발 중에는 콘솔에 남겨서 바로 알아채게 한다.
-    print("[asset] 못 찾음: \(name).png")
+    // Silently swallowing an asset-name typo leaves a lone person icon on
+    // screen with no clue why (this actually happened with a furn_SOFA →
+    // furn_SOFA_FRONT typo). Log it to the console during development so it's noticed right away.
+    print("[asset] not found: \(name).png")
     return Image(systemName: "exclamationmark.triangle.fill")
 }
 

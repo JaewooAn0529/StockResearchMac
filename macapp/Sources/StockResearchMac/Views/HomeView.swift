@@ -60,7 +60,7 @@ struct HomeView: View {
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
         }
-        .scrollContentBackground(.hidden)  // 배경 오피스 장면이 리스트 뒤로 비치게
+        .scrollContentBackground(.hidden)  // so the office scene behind shows through the list
     }
 
     private func debounceSearch(_ query: String) {

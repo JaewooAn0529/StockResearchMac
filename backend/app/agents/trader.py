@@ -1,8 +1,8 @@
-"""트레이더 (TradingAgents의 Trader Agent).
+"""Trader (the Trader Agent from TradingAgents).
 
-분석가 리포트와 bull/bear 토론 전체를 읽고 BUY/SELL/HOLD를 결정한다.
-결정은 구조화 출력으로 받는다 — 자유 서술에서 결정을 정규식으로 뽑아내면
-"매수를 고려해볼 만하지만..." 같은 문장에서 오판이 난다.
+Reads the analyst reports and the full bull/bear debate, and decides BUY/SELL/HOLD.
+The decision is captured as structured output — extracting a decision from free text
+with a regex leads to misreads on sentences like "might be worth considering a buy...".
 """
 
 from __future__ import annotations

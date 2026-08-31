@@ -1,7 +1,7 @@
 import Foundation
 
-// 백엔드 app/models/schemas.py 1:1 대응. 필드명은 snake_case 그대로 두고
-// APIClient의 JSONDecoder에서 .convertFromSnakeCase로 일괄 변환한다.
+// Mirrors app/models/schemas.py on the backend 1:1. Field names are kept in
+// snake_case here and converted in bulk by APIClient's JSONDecoder via .convertFromSnakeCase.
 
 struct SearchResult: Codable, Identifiable, Hashable {
     var id: String { ticker }
@@ -81,7 +81,7 @@ struct TechnicalResponse: Codable {
     let volume: Int
     let avgVolume20: Int?
     let volumeRatio: Double?
-    // 표준 기술지표 — 현재 상태 계산값이지 미래 예측이 아니다
+    // Standard technical indicators — these are computed current-state values, not future predictions
     let rsi14: Double?
     let macd: Double?
     let macdSignal: Double?
@@ -120,9 +120,10 @@ struct PeerComparisonResponse: Codable {
     let disclaimer: String
 }
 
-/// 과거 유사 하락→회복 통계 — 미래 예측이 아니라 과거 사실 조회.
-/// summary는 백엔드가 과거형/참고형 문장으로 만들어서 내려준다(app/models/schemas.py
-/// 참고) — 프론트는 이 문장을 그대로 표시만 하고 직접 조립하지 않는다.
+/// Statistics on similar past drop-and-recovery episodes — this looks up historical
+/// facts, not future predictions. The backend generates `summary` as a past-tense,
+/// reference-style sentence (see app/models/schemas.py) — the frontend just displays
+/// it as-is rather than assembling it itself.
 struct RecoveryHistoryResponse: Codable {
     let ticker: String
     let name: String
@@ -191,7 +192,7 @@ struct TraderDecision: Codable {
     let rationale: String
     let keyRisks: [String]
     let winningSide: String
-    /// 리스크 승인 게이트가 BUY/SELL을 HOLD로 강등했을 때, 원래 판단이 여기 남는다
+    /// When the risk approval gate downgrades a BUY/SELL to HOLD, the original decision is preserved here
     let originalDecision: String?
     let gateApplied: Bool?
 }
@@ -222,7 +223,7 @@ struct DebateAnalysisResponse: Codable {
     let disclaimer: String
 }
 
-/// 지난 판단 + 그 이후 실제 주가 변화 (사후 기록 조회, 예측 아님)
+/// A past decision plus the actual price change since then (a historical record lookup, not a prediction)
 struct DecisionRecord: Codable, Identifiable {
     var id: String { "\(ticker)-\(decidedAt)" }
     let ticker: String
@@ -238,7 +239,7 @@ struct DecisionRecord: Codable, Identifiable {
     let priceNow: Int?
     let returnPct: Double?
     let daysElapsed: Int?
-    /// ready=대조 완료 / pending=판단 당일이라 아직 종가 미확정 / error=조회 실패
+    /// ready = comparison complete / pending = decision was made today so today's close isn't final yet / error = lookup failed
     let status: String
 }
 

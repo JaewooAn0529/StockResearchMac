@@ -58,7 +58,7 @@ class ValuationResponse(BaseModel):
 
 
 class ConsensusResponse(BaseModel):
-    """증권사 컨센서스 인용 — 자체 분석이 아니므로 source로 출처를 명시한다."""
+    """Brokerage consensus citation — since this isn't original analysis, the source field records where it came from."""
 
     ticker: str
     name: str
@@ -81,7 +81,7 @@ class TechnicalResponse(BaseModel):
     volume: int
     avg_volume_20: int | None
     volume_ratio: float | None
-    # 표준 기술지표 — 현재 상태 계산값이지 미래 예측이 아니다
+    # Standard technical indicators — these are current-state calculated values, not future predictions
     rsi_14: float | None
     macd: float | None
     macd_signal: float | None
@@ -134,18 +134,19 @@ class NewsResponse(BaseModel):
 
 
 class RecoveryHistoryResponse(BaseModel):
-    """과거 유사 하락→회복 통계 — 미래 예측이 아니라 과거 사실 조회.
+    """Historical decline-to-recovery statistics — a lookup of past facts, not a future prediction.
 
-    summary는 반드시 과거형/참고형 문장이어야 한다("~걸렸습니다"). "다음에도
-    ~걸릴 것이다" 식으로 바뀌면 안 된다 — 이 문장은 백엔드에서만 만들고
-    프론트엔드는 그대로 표시만 한다(표현 규칙이 한 곳에서만 지켜지게).
+    summary must always be phrased in the past tense / as reference information
+    (e.g. "it took ~ days"). It must never read like "it will take ~ days next time" —
+    this sentence is generated only on the backend, and the frontend just displays it
+    as-is (so this phrasing rule only needs to be enforced in one place).
     """
 
     ticker: str
     name: str
     current_price: int
     current_return_pct: float
-    applicable: bool  # 매수가 대비 하락 중일 때만 True (상승/보합이면 회복 개념 자체가 해당 없음)
+    applicable: bool  # True only when the price is currently below the purchase price (if it's up or flat, the concept of "recovery" doesn't apply)
     sufficient_sample: bool
     sample_count: int
     unresolved_count: int
@@ -156,7 +157,7 @@ class RecoveryHistoryResponse(BaseModel):
 
 
 class EarningsCalendarResponse(BaseModel):
-    """실적발표 캘린더 — DART에 예고된 날짜가 없어 법정 제출기한을 계산한 값이다."""
+    """Earnings announcement calendar — DART doesn't publish an announced date, so this is a computed statutory filing deadline."""
 
     ticker: str
     name: str
@@ -193,14 +194,14 @@ class TraderDecision(BaseModel):
     rationale: str
     key_risks: list[str]
     winning_side: str
-    # 리스크 승인 게이트: reject/revise면 BUY/SELL이 HOLD로 강등되고
-    # 원래 판단은 original_decision에 남는다
+    # Risk approval gate: a reject/revise verdict downgrades BUY/SELL to HOLD,
+    # and the original decision is kept in original_decision
     original_decision: str | None = None
     gate_applied: bool = False
 
 
 class AgentTiming(BaseModel):
-    """어느 단계가 얼마나 걸렸는지 — 감사 추적용."""
+    """How long each stage took — for audit trail purposes."""
 
     stage: str
     seconds: float
@@ -213,7 +214,7 @@ class RiskReview(BaseModel):
 
 
 class DecisionRecord(BaseModel):
-    """지난 판단 + 그 이후 실제 주가 변화 (사후 기록 조회, 예측 아님)."""
+    """A past decision plus the actual price change since then (a retrospective record, not a prediction)."""
 
     ticker: str
     name: str
@@ -228,7 +229,7 @@ class DecisionRecord(BaseModel):
     price_now: int | None = None
     return_pct: float | None = None
     days_elapsed: int | None = None
-    # ready=대조 완료 / pending=판단 당일이라 아직 종가 미확정 / error=조회 실패
+    # ready=comparison complete / pending=decided today, closing price not yet finalized / error=lookup failed
     status: str = "pending"
 
 
@@ -244,7 +245,7 @@ class DebateAnalysisResponse(BaseModel):
     debate_rounds: list[DebateRound]
     decision: TraderDecision
     risk_review: RiskReview
-    # 감사 추적 — 단계별 소요시간과 총 LLM 호출 수
+    # Audit trail — per-stage timing and total LLM call count
     timings: list[AgentTiming] = []
     total_seconds: float = 0
     llm_calls: int = 0
@@ -253,10 +254,10 @@ class DebateAnalysisResponse(BaseModel):
 
 
 class DailySnapshotRow(BaseModel):
-    """앱 UI가 아니라 외부 백테스트 스크립트가 쓰는 리서치 전용 스키마.
+    """A research-only schema used by external backtest scripts, not the app UI.
 
-    daily_log.py가 만들던 스키마와 필드명을 그대로 맞춰서, 이 엔드포인트가
-    그 스크립트의 드롭인 대체가 되게 했다.
+    Field names deliberately match the schema daily_log.py used to produce, so this
+    endpoint can be a drop-in replacement for that script.
     """
 
     date: str

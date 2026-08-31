@@ -1,9 +1,10 @@
-"""연구원 토론 (TradingAgents의 Researcher Team).
+"""Researcher debate (the Researcher Team from the TradingAgents paper).
 
-Bull과 Bear가 같은 분석가 리포트를 보고 서로 반박한다. 라운드마다 상대의
-직전 발언이 프롬프트에 들어가므로, 2라운드부터는 새 주장을 펴는 게 아니라
-상대 논거를 깨는 데 집중하게 된다. 이 반박 압력이 없으면 두 에이전트가
-각자 독백만 하고 끝난다.
+Bull and Bear read the same analyst reports and rebut each other. Each round's
+prompt includes the opponent's previous statement, so from round 2 onward the
+agents focus on tearing down the other's argument rather than making new claims.
+Without this rebuttal pressure, the two agents would just each deliver a monologue
+and stop.
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ def _reports_block(reports: dict[str, str]) -> str:
 
 
 def run_debate(name: str, ticker: str, reports: dict[str, str]) -> list[dict]:
-    """[{round, bull, bear}, ...] 형태로 라운드별 발언을 반환한다."""
+    """Returns per-round statements in the form [{round, bull, bear}, ...]."""
     base = f"종목: {name} ({ticker})\n\n분석가 리포트:\n{_reports_block(reports)}"
     rounds = []
     bull_last = bear_last = None
@@ -50,7 +51,7 @@ def run_debate(name: str, ticker: str, reports: dict[str, str]) -> list[dict]:
             bull_prompt += f"\n\n매도 측 직전 발언:\n{bear_last}"
         bull_last = ask(_BULL, bull_prompt, max_tokens=600)
 
-        # Bear는 같은 라운드의 Bull 발언까지 보고 답한다 (동시 발언이 아니라 응수 구조)
+        # Bear responds after seeing Bull's statement from the same round (a back-and-forth, not simultaneous statements)
         bear_prompt = f"{base}\n\n매수 측 직전 발언:\n{bull_last}"
         bear_last = ask(_BEAR, bear_prompt, max_tokens=600)
 

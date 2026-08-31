@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// 홈 화면(즐겨찾기)과 검색 결과 양쪽에서 쓰는 카드. 현재가/등락률은 자체적으로
-/// price 엔드포인트를 호출해서 채운다 — 목록 화면이 상세 데이터까지 몰아서
-/// 들고 있을 필요가 없게 카드가 자기 몫만 책임진다.
+/// A card used on both the home screen (favorites) and the search results.
+/// It fills in the current price/change percent itself by calling the price
+/// endpoint — this way the card is responsible for its own share of the data,
+/// so the list screen doesn't need to hold detailed data all at once.
 struct StockCardView: View {
     let result: SearchResult
     @EnvironmentObject private var favorites: FavoritesStore

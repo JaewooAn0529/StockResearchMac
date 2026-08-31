@@ -14,7 +14,7 @@ enum APIError: LocalizedError {
     }
 }
 
-/// FastAPI 백엔드(localhost:8000) 클라이언트. 개인용 로컬 도구라 인증 없이 바로 붙는다.
+/// Client for the FastAPI backend (localhost:8000). This is a personal local tool, so it connects directly without authentication.
 struct APIClient {
     static let shared = APIClient()
 
@@ -32,7 +32,7 @@ struct APIClient {
 
         var req = URLRequest(url: comps.url!)
         req.httpMethod = method
-        // 토론 엔드포인트는 로컬 LLM 호출 10회라 몇 분 걸릴 수 있어 넉넉히 잡는다
+        // The debate endpoint makes 10 local LLM calls and can take several minutes, so allow plenty of time
         req.timeoutInterval = 300
 
         let (data, response) = try await URLSession.shared.data(for: req)

@@ -115,8 +115,8 @@ struct DebateView: View {
         .padding()
     }
 
-    /// 어느 단계가 얼마나 걸렸는지 — 느린 구간을 찾고, 클라우드 API로 바꿨을 때
-    /// 비용이 얼마나 될지 감을 잡는 용도.
+    /// How long each stage took — for spotting slow steps and getting a feel
+    /// for what the cost would be if switched to a cloud API.
     private func auditCard(_ timings: [AgentTiming], total: Double?, calls: Int?) -> some View {
         CardContainer(title: "실행 기록", icon: "clock.badge.checkmark") {
             VStack(alignment: .leading, spacing: 4) {
@@ -156,7 +156,7 @@ struct DebateView: View {
                 Spacer()
             }
 
-            // 리스크 승인 게이트가 판단을 뒤집었으면 그 사실을 눈에 띄게 알린다
+            // If the risk approval gate overturned the decision, call that out prominently
             if decision.gateApplied == true, let original = decision.originalDecision {
                 Label(
                     "리스크 검토에서 반려되어 \(original) → HOLD로 강등되었습니다",

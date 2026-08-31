@@ -1,14 +1,15 @@
-"""원본 데이터를 프롬프트에 넣을 수 있게 압축한다.
+"""Compresses raw data so it can fit into a prompt.
 
-62거래일치 OHLCV와 수급 시계열을 그대로 넣으면 토큰만 먹고 모델이 읽지도
-않는다. 에이전트가 실제로 판단에 쓰는 집계값만 남긴다.
+Feeding in 62 trading days of raw OHLCV and flow time series as-is would just burn
+tokens without the model actually reading it. We keep only the aggregated values
+the agent actually uses to make its judgment.
 """
 
 from __future__ import annotations
 
 
 def _man(won: float) -> str:
-    """원 단위 금액을 억 단위로. 수급 금액이 조 단위까지 가서 그대로 두면 읽기 어렵다."""
+    """Converts a won amount to units of 100 million won (eok). Flow amounts can reach into the trillions, and left as-is they're hard to read."""
     return f"{won / 1e8:,.0f}억"
 
 
@@ -78,7 +79,7 @@ def format_technical(t: dict | None) -> str:
         f"60일 이동평균 {t['ma60']:,.0f}원 / 이격도 {t['disparity_60']}%",
         f"당일 거래량 {t['volume']:,} / 20일 평균 대비 {t['volume_ratio']}배",
     ]
-    # 표준 지표는 값이 있을 때만 넣는다(표본이 짧으면 None)
+    # Standard indicators are only included when a value exists (None if the sample is too short)
     if t.get("rsi_14") is not None:
         lines.append(f"RSI(14) {t['rsi_14']} (통상 70↑ 과매수 / 30↓ 과매도 구간으로 해석)")
     if t.get("macd") is not None:
