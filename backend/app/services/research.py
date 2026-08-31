@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 from datetime import datetime, timedelta, timezone
 
 from pykrx import stock
@@ -17,6 +19,28 @@ from app.services import news as news_service
 KST = timezone(timedelta(hours=9))
 
 _INDEX_CODE = {"KOSPI": "1001", "KOSDAQ": "2001"}
+
+
+class UpstreamFetchError(RuntimeError):
+    """KRX 응답 실패(요청 제한 등)로 데이터를 못 받은 경우. 휴장일과는 다르다.
+
+    pykrx는 json.JSONDecodeError 같은 파싱 실패를 내부에서 삼키고
+    "Error occurred in ..."을 표준출력에 찍은 뒤 빈 DataFrame을 반환한다
+    (site-packages/pykrx/website/comm/util.py의 dataframe_empty_handler).
+    그래서 겉보기엔 "그냥 빈 데이터"라 휴장일과 구분이 안 되는데, 백필처럼
+    반복 호출하는 입장에선 이 둘을 절대 같은 걸로 취급하면 안 된다 —
+    휴장일은 건너뛰어야 하지만, 요청 제한은 재시도해야 하고, 그걸 "휴장일"로
+    기록해버리면 데이터가 조용히 빠진 채로 완성된 것처럼 보인다.
+    """
+
+
+@contextlib.contextmanager
+def _detect_upstream_errors():
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        yield
+    if "Error occurred in" in buf.getvalue():
+        raise UpstreamFetchError(buf.getvalue().strip())
 
 
 def _same_day_news_count(name: str, date_str: str) -> int | None:
@@ -51,12 +75,15 @@ def get_daily_snapshot(
     if market not in _INDEX_CODE:
         raise ValueError(f"지원하지 않는 시장: {market} (KOSPI/KOSDAQ만 가능)")
 
-    flow = stock.get_market_net_purchases_of_equities_by_ticker(date_str, date_str, market, "외국인")
+    with _detect_upstream_errors():
+        flow = stock.get_market_net_purchases_of_equities_by_ticker(date_str, date_str, market, "외국인")
     if flow is None or flow.empty:
-        return None  # 휴장일 등 거래 데이터 없음
+        return None  # 진짜 휴장일 — 에러 없이 그냥 빈 데이터였던 경우만 여기 도달
 
-    price = stock.get_market_ohlcv(date_str, market=market)
-    index = stock.get_index_ohlcv(date_str, date_str, _INDEX_CODE[market])
+    with _detect_upstream_errors():
+        price = stock.get_market_ohlcv(date_str, market=market)
+    with _detect_upstream_errors():
+        index = stock.get_index_ohlcv(date_str, date_str, _INDEX_CODE[market])
     kospi_close = float(index["종가"].iloc[0]) if index is not None and not index.empty else None
 
     merged = flow.join(price[["종가"]], how="inner")

@@ -19,6 +19,15 @@ def daily_snapshot(date: str, market: str = "KOSPI", top_n: int | None = None, i
         result = research_service.get_daily_snapshot(date, market, top_n=top_n, include_news=include_news)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except research_service.UpstreamFetchError as exc:
+        # 휴장일(404)과는 다르다 — KRX 쪽 요청 실패(주로 과도한 연속호출로 인한
+        # 제한)라 호출자가 잠시 쉬었다 재시도해야 한다. 백필 스크립트가 이걸
+        # "휴장일"로 착각해 조용히 건너뛰면 데이터가 빠진 채로 완성된 것처럼
+        # 보이므로 반드시 구분되는 상태코드로 알려야 한다.
+        raise HTTPException(
+            status_code=503,
+            detail=f"KRX 응답 실패 (요청 제한 가능성) — 잠시 후 재시도하세요: {exc}",
+        )
 
     if result is None:
         raise HTTPException(status_code=404, detail="해당 날짜에 거래 데이터가 없습니다 (휴장일일 수 있음)")

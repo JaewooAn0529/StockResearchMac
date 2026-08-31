@@ -15,8 +15,11 @@ macapp/.swiftpm/
 backend/data/
 backend/logs/
 
-# 대용량 에셋 생성 파이프라인 (모델 캐시·중간 산출물, 875M+)
-assets-gen/
+# 에셋 생성 파이프라인 — 스크립트(.py)는 과정 기록으로 남기고,
+# 모델 캐시·중간 산출물(875M+)만 뺀다. 최종 결과물은 macapp/Resources에 있다.
+assets-gen/venv/
+assets-gen/__pycache__/
+assets-gen/*.png
 
 # macOS
 .DS_Store
