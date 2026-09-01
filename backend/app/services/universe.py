@@ -11,6 +11,10 @@ the market classification.
 from __future__ import annotations
 
 import io
+import json
+import time
+from datetime import timedelta
+from pathlib import Path
 
 import pandas as pd
 import requests
@@ -18,11 +22,20 @@ import requests
 _KIND_URL = "http://kind.krx.co.kr/corpgeneral/corpList.do"
 _MARKET_MAP = {"유가": "KOSPI", "코스닥": "KOSDAQ"}
 
+# The listed-company list barely changes (a handful of IPOs/delistings a
+# year), so we don't need a fresh network call on every backend restart —
+# and KRX/KIND occasionally rate-limits or IP-blocks this Mac for hours at a
+# time, which used to take search down completely. A disk cache with a
+# generous TTL, plus falling back to a stale cache when the network fetch
+# fails, means a KRX outage no longer breaks search.
+_DISK_CACHE = Path(__file__).resolve().parent.parent.parent / "data" / "universe_cache.json"
+_CACHE_TTL = timedelta(days=7)
+
 _cache: list[dict] | None = None
 _by_ticker: dict[str, dict] | None = None
 
 
-def _build_universe() -> list[dict]:
+def _fetch_from_kind() -> list[dict]:
     res = requests.get(
         _KIND_URL,
         params={"method": "download"},
@@ -46,6 +59,49 @@ def _build_universe() -> list[dict]:
             "industry": row["업종"] if pd.notna(row["업종"]) else None,
         })
     return entries
+
+
+def _read_disk_cache() -> tuple[list[dict], float] | None:
+    if not _DISK_CACHE.exists():
+        return None
+    try:
+        payload = json.loads(_DISK_CACHE.read_text(encoding="utf-8"))
+        return payload["entries"], payload["fetched_at"]
+    except Exception as exc:
+        print(f"[warn] universe disk cache unreadable, ignoring it: {exc}")
+        return None
+
+
+def _write_disk_cache(entries: list[dict]) -> None:
+    try:
+        _DISK_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        _DISK_CACHE.write_text(
+            json.dumps({"entries": entries, "fetched_at": time.time()}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except Exception as exc:
+        print(f"[warn] failed to write universe disk cache: {exc}")
+
+
+def _build_universe() -> list[dict]:
+    disk = _read_disk_cache()
+    is_fresh = disk is not None and (time.time() - disk[1]) < _CACHE_TTL.total_seconds()
+
+    if is_fresh:
+        return disk[0]
+
+    try:
+        entries = _fetch_from_kind()
+        _write_disk_cache(entries)
+        return entries
+    except Exception as exc:
+        if disk is not None:
+            # KRX/KIND is down or blocking us again — serve the stale cache
+            # rather than taking search down entirely.
+            age_days = (time.time() - disk[1]) / 86400
+            print(f"[warn] KIND fetch failed ({exc}); falling back to disk cache ({age_days:.1f}d old)")
+            return disk[0]
+        raise  # first-ever run with no cache and no network — nothing to serve
 
 
 def get_universe() -> list[dict]:
