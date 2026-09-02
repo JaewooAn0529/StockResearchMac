@@ -15,6 +15,7 @@ struct StockCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
+                StockLogoView(ticker: result.ticker, size: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(result.name)
                         .font(.headline)

@@ -106,6 +106,7 @@ struct StockDetailView: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
+            StockLogoView(ticker: ticker, size: 44)
             Text(displayName).font(.largeTitle.bold())
             if case .loaded(let price) = priceState {
                 Text("\(price.currentPrice.formatted())원")

@@ -7,9 +7,10 @@ backend/.env
 **/__pycache__/
 *.pyc
 
-# Swift 빌드 산출물
+# Swift build output
 macapp/.build/
 macapp/.swiftpm/
+macapp/build/
 
 # 런타임 데이터/로그
 backend/data/
