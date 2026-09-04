@@ -99,7 +99,11 @@ def format_volatility(v: dict | None) -> str:
         return "변동성 데이터 없음"
     return (
         f"베타 {v['beta']} ({v['benchmark']} 지수 대비, {v['window_days']}거래일 표본) / "
-        f"연율화 변동성 {v['annualized_volatility_pct']}%"
+        f"연율화 변동성 {v['annualized_volatility_pct']}%\n"
+        f"1일 95% VaR: 정규분포 가정 {v['var_95_1day_pct']}% / 실측 5분위 {v['var_95_1day_historical_pct']}% "
+        f"(하루 최대손실 추정치, 실측값이 더 신뢰도 높음)\n"
+        f"권장 최대 비중: 이 종목의 VaR이 일일 리스크 예산(2%)을 넘지 않으려면 "
+        f"포트폴리오의 {v['suggested_max_position_pct']}% 이하로 제한"
     )
 
 

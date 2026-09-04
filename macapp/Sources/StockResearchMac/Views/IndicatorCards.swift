@@ -202,6 +202,55 @@ struct VolatilityCard: View {
                             Text("베타 \(beta, specifier: "%.2f") (\(data.benchmark) 대비)").font(.caption)
                         }
                         Text("연율화 변동성 \(data.annualizedVolatilityPct, specifier: "%.1f")%").font(.caption)
+                        Divider().padding(.vertical, 2)
+                        Text("1일 95% VaR (실측) \(data.var951dayHistoricalPct, specifier: "%.2f")%")
+                            .font(.caption)
+                        Text("1일 95% VaR (정규분포 가정) \(data.var951dayPct, specifier: "%.2f")%")
+                            .font(.caption2).foregroundStyle(.secondary)
+                        Text("권장 최대 비중 \(data.suggestedMaxPositionPct, specifier: "%.1f")% (일일 리스크 예산 2% 기준)")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                )
+            }
+        }
+    }
+}
+
+// MARK: - RSI signal statistics
+
+struct RsiSignalStatsCard: View {
+    let state: LoadState<RsiSignalStatsResponse>
+
+    var body: some View {
+        CardContainer(title: "RSI 신호 통계", icon: "chart.bar.xaxis") {
+            CardStateView(state: state) { data in
+                AnyView(
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text("표본 \(data.sampleCount)건")
+                                .font(.caption.bold())
+                            if data.statisticallySignificant {
+                                Text("통계적으로 유의미").font(.caption2)
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(.green, in: Capsule())
+                            } else if !data.sufficientSample {
+                                Text("표본 부족").font(.caption2)
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(.secondary, in: Capsule())
+                            }
+                        }
+                        if let hitRate = data.hitRatePct {
+                            Text("RSI\(data.rsiThreshold, specifier: "%.0f") 미만 진입 후 \(data.windowDays)거래일 내 \(data.gainThresholdPct, specifier: "%.0f")%↑ 확률 \(hitRate, specifier: "%.0f")%")
+                                .font(.caption)
+                        }
+                        if let p = data.pValue {
+                            Text("p = \(p, specifier: "%.3f")").font(.caption2).foregroundStyle(.secondary)
+                        }
+                        Text(data.summary)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                 )
             }

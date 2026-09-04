@@ -12,6 +12,7 @@ struct StockDetailView: View {
     @State private var consensusState: LoadState<ConsensusResponse> = .loading
     @State private var technicalState: LoadState<TechnicalResponse> = .loading
     @State private var volatilityState: LoadState<VolatilityResponse> = .loading
+    @State private var rsiSignalStatsState: LoadState<RsiSignalStatsResponse> = .loading
     @State private var peersState: LoadState<PeerComparisonResponse> = .loading
     @State private var earningsState: LoadState<EarningsCalendarResponse> = .loading
     @State private var riskState: LoadState<RiskFlagsResponse> = .loading
@@ -53,6 +54,7 @@ struct StockDetailView: View {
                     ConsensusCard(state: consensusState)
                     TechnicalCard(state: technicalState)
                     VolatilityCard(state: volatilityState)
+                    RsiSignalStatsCard(state: rsiSignalStatsState)
                     PeersCard(state: peersState)
                     EarningsCalendarCard(state: earningsState)
                     RiskFlagsCard(state: riskState)
@@ -87,6 +89,7 @@ struct StockDetailView: View {
             Task { await loadConsensus() }
             Task { await loadTechnical() }
             Task { await loadVolatility() }
+            Task { await loadRsiSignalStats() }
             Task { await loadPeers() }
             Task { await loadEarnings() }
             Task { await loadRisk() }
@@ -127,6 +130,7 @@ struct StockDetailView: View {
         consensusState = .loading
         technicalState = .loading
         volatilityState = .loading
+        rsiSignalStatsState = .loading
         peersState = .loading
         earningsState = .loading
         riskState = .loading
@@ -158,6 +162,10 @@ struct StockDetailView: View {
     private func loadVolatility() async {
         do { volatilityState = .loaded(try await APIClient.shared.volatility(ticker)) }
         catch { volatilityState = .failed(error.localizedDescription) }
+    }
+    private func loadRsiSignalStats() async {
+        do { rsiSignalStatsState = .loaded(try await APIClient.shared.rsiSignalStats(ticker)) }
+        catch { rsiSignalStatsState = .failed(error.localizedDescription) }
     }
     private func loadPeers() async {
         do { peersState = .loaded(try await APIClient.shared.peers(ticker)) }

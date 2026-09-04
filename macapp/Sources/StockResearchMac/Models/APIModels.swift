@@ -101,6 +101,34 @@ struct VolatilityResponse: Codable {
     let windowDays: Int
     let beta: Double?
     let annualizedVolatilityPct: Double
+    // 1-day 95% VaR, two ways — parametric assumes a normal distribution,
+    // historical is the empirical 5th percentile (more defensible)
+    let var951dayPct: Double
+    let var951dayHistoricalPct: Double
+    let suggestedMaxPositionPct: Double
+    let disclaimer: String
+}
+
+/// Statistical significance of an RSI-oversold signal, from this stock's own
+/// history — a retrospective lookup, not a forecast. When the sample is too
+/// small, sufficientSample/statisticallySignificant come back false rather
+/// than a forced p-value.
+struct RsiSignalStatsResponse: Codable {
+    let ticker: String
+    let name: String
+    let asOfDate: String
+    let rsiThreshold: Double
+    let windowDays: Int
+    let gainThresholdPct: Double
+    let sampleCount: Int
+    let sufficientSample: Bool
+    let statisticallySignificant: Bool
+    let hitRatePct: Double?
+    let meanSignalReturnPct: Double?
+    let meanBaselineReturnPct: Double?
+    let tStatistic: Double?
+    let pValue: Double?
+    let summary: String
     let disclaimer: String
 }
 
@@ -207,6 +235,8 @@ struct RiskReview: Codable {
     let verdict: String
     let concern: String
     let adjustedConfidence: String
+    /// Deterministic, not LLM-estimated — this position's own VaR against a fixed daily risk budget
+    let suggestedPositionPct: Double?
 }
 
 struct DebateAnalysisResponse: Codable {

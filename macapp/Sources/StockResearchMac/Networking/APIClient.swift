@@ -66,6 +66,7 @@ struct APIClient {
     func consensus(_ ticker: String) async throws -> ConsensusResponse { try await request("stocks/\(ticker)/consensus") }
     func technical(_ ticker: String) async throws -> TechnicalResponse { try await request("stocks/\(ticker)/technical") }
     func volatility(_ ticker: String) async throws -> VolatilityResponse { try await request("stocks/\(ticker)/volatility") }
+    func rsiSignalStats(_ ticker: String) async throws -> RsiSignalStatsResponse { try await request("stocks/\(ticker)/rsi-signal-stats") }
     func peers(_ ticker: String) async throws -> PeerComparisonResponse { try await request("stocks/\(ticker)/peers") }
     func earningsCalendar(_ ticker: String) async throws -> EarningsCalendarResponse { try await request("stocks/\(ticker)/earnings-calendar") }
     func riskFlags(_ ticker: String) async throws -> RiskFlagsResponse { try await request("stocks/\(ticker)/risk-flags") }

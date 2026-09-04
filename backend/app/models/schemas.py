@@ -101,7 +101,40 @@ class VolatilityResponse(BaseModel):
     window_days: int
     beta: float | None
     annualized_volatility_pct: float
+    # 1-day 95% VaR, two ways — parametric assumes a normal distribution
+    # (understates fat-tail risk), historical is the empirical 5th percentile
+    var_95_1day_pct: float
+    var_95_1day_historical_pct: float
+    # Position-sizing guideline: cap this position so its own historical VaR
+    # doesn't exceed a fixed daily risk budget (see volatility.py)
+    suggested_max_position_pct: float
     disclaimer: str = DISCLAIMER
+
+
+class RsiSignalStatsResponse(BaseModel):
+    """Statistical significance of an RSI-oversold signal, from this stock's own history.
+
+    ⚠️ A retrospective statistical lookup, not a forecast. When the sample is
+    too small for a trustworthy test, sufficient_sample/statistically_significant
+    are False rather than forcing a p-value into significance.
+    """
+
+    ticker: str
+    name: str
+    as_of_date: str
+    rsi_threshold: float
+    window_days: int
+    gain_threshold_pct: float
+    sample_count: int
+    sufficient_sample: bool
+    statistically_significant: bool
+    hit_rate_pct: float | None
+    mean_signal_return_pct: float | None
+    mean_baseline_return_pct: float | None
+    t_statistic: float | None
+    p_value: float | None
+    summary: str
+    disclaimer: str = HISTORICAL_DISCLAIMER
 
 
 class PeerValuation(BaseModel):
@@ -211,6 +244,9 @@ class RiskReview(BaseModel):
     verdict: str
     concern: str
     adjusted_confidence: str
+    # Deterministic, not LLM-estimated — computed in volatility.py from this
+    # position's own VaR against a fixed daily risk budget (see suggested_max_position_pct)
+    suggested_position_pct: float | None = None
 
 
 class DecisionRecord(BaseModel):

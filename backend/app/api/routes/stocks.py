@@ -10,6 +10,7 @@ from app.models.schemas import (
     PriceResponse,
     RecoveryHistoryResponse,
     RiskFlagsResponse,
+    RsiSignalStatsResponse,
     SearchResult,
     TechnicalResponse,
     ValuationResponse,
@@ -22,6 +23,7 @@ from app.services import historical_pattern as historical_pattern_service
 from app.services import news as news_service
 from app.services import peers as peers_service
 from app.services import price as price_service
+from app.services import signal_stats as signal_stats_service
 from app.services import technical as technical_service
 from app.services import universe
 from app.services import valuation as valuation_service
@@ -133,3 +135,12 @@ def get_recovery_history(ticker: str, buy_price: float = Query(..., gt=0)):
         raise HTTPException(status_code=404, detail=f"과거 데이터를 찾을 수 없습니다: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return RecoveryHistoryResponse(ticker=ticker, name=name, **data)
+
+
+@router.get("/{ticker}/rsi-signal-stats", response_model=RsiSignalStatsResponse)
+def get_rsi_signal_stats(ticker: str):
+    data = signal_stats_service.get_rsi_signal_stats(ticker)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"RSI 신호 통계 데이터를 찾을 수 없습니다: {ticker}")
+    name = krx.get_market_ticker_name(ticker)
+    return RsiSignalStatsResponse(ticker=ticker, name=name, **data)

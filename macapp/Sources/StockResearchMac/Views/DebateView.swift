@@ -200,6 +200,11 @@ struct DebateView: View {
                 }
                 Text("조정된 확신도: \(review.adjustedConfidence)")
                     .font(.caption).foregroundStyle(.secondary)
+                if let pct = review.suggestedPositionPct {
+                    Text("권장 최대 비중: 포트폴리오의 \(pct, specifier: "%.1f")% 이하 (VaR 기반 계산값)")
+                        .font(.caption.bold())
+                        .foregroundStyle(Theme.accent)
+                }
             }
         }
     }
