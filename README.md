@@ -70,6 +70,8 @@ for full attribution.
 
 A running log of what's landed on `main`, newest first.
 
+- `9f502a8` — Claude Code GitHub Actions workflow, so `@claude` mentions on
+  issues/PRs can trigger Claude Code directly on this repo
 - `9e6cdf3` — VaR-based risk sizing (parametric + historical 1-day 95% VaR,
   deterministic position-size guidance) and RSI-signal statistical
   significance testing (Welch's t-test, honest about small-sample cases)
