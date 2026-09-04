@@ -66,6 +66,21 @@ The pixel-art character/furniture/tile sprites are sourced from
 See [macapp/Sources/StockResearchMac/Resources/CREDITS.md](macapp/Sources/StockResearchMac/Resources/CREDITS.md)
 for full attribution.
 
+## Merged
+
+A running log of what's landed on `main`, newest first.
+
+- `9e6cdf3` — VaR-based risk sizing (parametric + historical 1-day 95% VaR,
+  deterministic position-size guidance) and RSI-signal statistical
+  significance testing (Welch's t-test, honest about small-sample cases)
+- `52af283` — Per-stock logo icons in search results and the stock detail view
+- `124bbc5` — Disk cache with stale-fallback for the stock universe list, so a
+  KRX/KIND outage no longer breaks search
+- `9e85fcb` — Translated code comments, docstrings, and all docs to English
+- `d685aba` — Public release prep: root README, MIT license, asset-gen scripts
+  tracked in git
+- `6753f1f` — Initial commit: FastAPI backend + SwiftUI macOS app
+
 ## License
 
 The code in this repository is under the MIT License. See [LICENSE](LICENSE).
