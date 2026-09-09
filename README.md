@@ -70,6 +70,11 @@ for full attribution.
 
 A running log of what's landed on `main`, newest first.
 
+- `391a25f` — Fixed `_ollama_ask_json` only retrying on Chinese-drift and not
+  on a truncated/malformed JSON response, which crashed the whole debate;
+  also raised its token budget so the local model has room to finish
+- `31c545a` — Fixed the Claude Code workflow only wiring up `ANTHROPIC_API_KEY`
+  and never `CLAUDE_CODE_OAUTH_TOKEN`, so the OAuth-token setup path failed
 - `9f502a8` — Claude Code GitHub Actions workflow, so `@claude` mentions on
   issues/PRs can trigger Claude Code directly on this repo
 - `9e6cdf3` — VaR-based risk sizing (parametric + historical 1-day 95% VaR,
