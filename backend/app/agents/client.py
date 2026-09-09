@@ -118,10 +118,19 @@ def _ollama_ask_json(system: str, prompt: str, schema: dict, max_tokens: int, re
     raw = ""
     for attempt in range(retries + 1):
         raw = _ollama_chat(system, prompt, max_tokens, format_=schema)
-        if not _contains_chinese(raw):
+        if _contains_chinese(raw):
+            print(f"[warn] Chinese-language drift detected, retrying {attempt + 1}/{retries}")
+            continue
+        try:
             return json.loads(raw)
-        print(f"[warn] 중국어 드리프트 감지, 재시도 {attempt + 1}/{retries}")
-    return json.loads(raw)
+        except json.JSONDecodeError as exc:
+            # A local 7B model occasionally cuts a JSON string off mid-token
+            # (usually when it runs into max_tokens before it's done writing
+            # the response) — that's a truncated response, not a permanent
+            # failure, so it's worth a fresh attempt rather than crashing the
+            # whole debate.
+            print(f"[warn] JSON parse failed ({exc}), retrying {attempt + 1}/{retries}")
+    return json.loads(raw)  # out of retries — let the final attempt's error surface
 
 
 # Call counter for audit trail purposes. We surface how many times the LLM is called

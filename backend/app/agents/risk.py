@@ -54,7 +54,10 @@ def run_risk_manager(name: str, ticker: str, decision: dict, data: dict) -> dict
         f"{fmt.format_volatility(data.get('volatility'))}\n"
         f"{fmt.format_valuation(data.get('valuation'))}",
     ])
-    result = ask_json(_SYSTEM, prompt, _SCHEMA, max_tokens=500)
+    # 500 was cutting the local model off mid-JSON-string on longer concern
+    # text (observed: "Unterminated string" parse failures) — 800 gives it
+    # enough room to actually finish the object it started.
+    result = ask_json(_SYSTEM, prompt, _SCHEMA, max_tokens=800)
 
     # The position-size number itself is computed deterministically in
     # volatility.py (from real VaR math), not left to the LLM to invent —
