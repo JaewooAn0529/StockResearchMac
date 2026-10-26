@@ -26,7 +26,8 @@ _client: anthropic.Anthropic | None = None
 # temperature is high (e.g. the entire response coming out in Chinese after round 2 of
 # a debate). We append this to the end of every system prompt so it applies uniformly
 # to both providers.
-_LANGUAGE_GUARD = "\n\n반드시 한국어로만 답하라. 중국어, 영어 등 다른 언어를 섞지 마라."
+_LANGUAGE_GUARD = ("\n\nAnswer only in English. Do not mix in Chinese, Korean, or any other language — "
+                   "except Korean company names, which stay exactly as given.")
 
 
 class AgentRefusal(RuntimeError):
@@ -44,7 +45,7 @@ def _extract_anthropic_text(response) -> str:
     # Reading content[0] before checking stop_reason raises IndexError on a refusal
     if response.stop_reason == "refusal":
         detail = getattr(response.stop_details, "category", None)
-        raise AgentRefusal(f"모델이 응답을 거절했습니다 (category={detail})")
+        raise AgentRefusal(f"The model refused to respond (category={detail})")
     return "".join(b.text for b in response.content if b.type == "text").strip()
 
 
@@ -110,7 +111,7 @@ def _ollama_ask(system: str, prompt: str, max_tokens: int, retries: int = 2) -> 
         text = _ollama_chat(system, prompt, max_tokens)
         if not _contains_chinese(text):
             return text
-        print(f"[warn] 중국어 드리프트 감지, 재시도 {attempt + 1}/{retries}")
+        print(f"[warn] Chinese-language drift detected, retrying {attempt + 1}/{retries}")
     return text  # if still contaminated after exhausting retries, return the last result anyway
 
 

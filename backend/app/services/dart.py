@@ -46,10 +46,10 @@ def _milestones(fy_start: date) -> list[tuple[str, date, int]]:
     """List of (disclosure type, quarter/fiscal-year end date, days until filing deadline)."""
     out = []
     for offset, (label, deadline_days) in {
-        3: ("1분기보고서", 45),
-        6: ("반기보고서", 45),
-        9: ("3분기보고서", 45),
-        12: ("사업보고서", 90),
+        3: ("Q1 report", 45),
+        6: ("Half-year report", 45),
+        9: ("Q3 report", 45),
+        12: ("Annual report", 90),
     }.items():
         idx = fy_start.month - 2 + offset
         year = fy_start.year + idx // 12
@@ -90,7 +90,7 @@ def get_earnings_calendar(ticker: str, today: date | None = None) -> dict | None
         "report_type": label,
         "deadline_date": deadline.strftime("%Y-%m-%d"),
         "d_day": (deadline - today).days,
-        "note": "회사가 예고한 실적발표일이 아니라 자본시장법상 정기공시 법정 제출기한 추정치입니다.",
+        "note": "Not an earnings date announced by the company — an estimate of the statutory periodic-filing deadline under the Capital Markets Act.",
     }
 
 

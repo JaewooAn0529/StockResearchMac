@@ -12,13 +12,13 @@ struct DecisionHistoryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(title: "지난 판단 되돌아보기", icon: "clock.arrow.circlepath")
+                SectionHeader(title: "Looking back at past decisions", icon: "clock.arrow.circlepath")
 
                 CardStateView(state: state) { data in
                     AnyView(
                         Group {
                             if data.records.isEmpty {
-                                Text("아직 기록된 판단이 없습니다. 종목 화면에서 토론을 실행하면 여기에 쌓입니다.")
+                                Text("No decisions recorded yet. Run a debate from a stock's screen and it will show up here.")
                                     .font(.callout)
                                     .foregroundStyle(.secondary)
                             } else {
@@ -40,7 +40,7 @@ struct DecisionHistoryView: View {
             }
             .padding()
         }
-        .navigationTitle("판단 기록")
+        .navigationTitle("Decision history")
         .task { await load() }
     }
 
@@ -79,21 +79,21 @@ struct DecisionHistoryView: View {
             case "ready":
                 if let then = r.priceAtDecision, let now = r.priceNow, let pct = r.returnPct {
                     HStack(spacing: 6) {
-                        Text("판단 시점 \(then.formatted())원 → 최근 \(now.formatted())원")
+                        Text("At decision ₩\(then.formatted()) → latest ₩\(now.formatted())")
                             .font(.caption)
                         Text(String(format: "%+.2f%%", pct))
                             .font(.caption.bold())
                             .foregroundStyle(Theme.changeColor(pct))
                         if let days = r.daysElapsed {
-                            Text("· \(days)일 경과").font(.caption2).foregroundStyle(.secondary)
+                            Text("· \(days) days elapsed").font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }
             case "pending":
-                Text("판단 당일이라 아직 대조할 종가가 없습니다")
+                Text("Decided today, so there's no closing price to compare yet")
                     .font(.caption2).foregroundStyle(.secondary)
             default:
-                Text("주가 조회에 실패했습니다")
+                Text("Failed to look up the price")
                     .font(.caption2).foregroundStyle(.secondary)
             }
 

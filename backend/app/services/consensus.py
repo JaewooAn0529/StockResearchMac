@@ -16,7 +16,7 @@ import requests
 from bs4 import BeautifulSoup
 
 _URL = "https://finance.naver.com/item/coinfo.naver"
-_SOURCE = "네이버금융 컨센서스(에프앤가이드 집계, 증권사 3곳 이상 평균)"
+_SOURCE = "Naver Finance consensus (FnGuide aggregate, average of 3+ brokers)"
 
 
 def get_consensus(ticker: str) -> dict | None:

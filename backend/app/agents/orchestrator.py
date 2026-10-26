@@ -50,7 +50,7 @@ def gather_data(ticker: str, name: str) -> dict:
         try:
             return key, fn()
         except Exception as exc:
-            print(f"[warn] {key} 수집 실패: {exc}")
+            print(f"[warn] failed to collect {key}: {exc}")
             return key, None
 
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -76,10 +76,10 @@ def apply_risk_gate(decision: dict, risk: dict) -> dict:
     if verdict in ("reject", "revise") and original in ("BUY", "SELL"):
         gated["decision"] = "HOLD"
         gated["gate_applied"] = True
-        concern = risk.get("concern") or "리스크 검토에서 반려됨"
+        concern = risk.get("concern") or "Rejected in risk review"
         gated["rationale"] = (
-            f"[리스크 검토로 {original} → HOLD 강등] {concern}\n\n"
-            f"(원래 트레이더 판단) {decision.get('rationale', '')}"
+            f"[Downgraded {original} → HOLD by risk review] {concern}\n\n"
+            f"(Original trader rationale) {decision.get('rationale', '')}"
         )
 
     # If the risk manager lowered the confidence level, apply that too
@@ -103,11 +103,11 @@ def run_analysis(ticker: str) -> dict:
         timings.append({"stage": stage, "seconds": round(time.monotonic() - t0, 1)})
         return result
 
-    data = timed("데이터 수집", lambda: gather_data(ticker, name))
-    reports = timed("분석가 4인", lambda: run_analysts(name, ticker, data))
-    rounds = timed("연구원 토론", lambda: run_debate(name, ticker, reports))
-    decision = timed("트레이더 판단", lambda: run_trader(name, ticker, reports, rounds))
-    risk = timed("리스크 검토", lambda: run_risk_manager(name, ticker, decision, data))
+    data = timed("Data collection", lambda: gather_data(ticker, name))
+    reports = timed("4 analysts", lambda: run_analysts(name, ticker, data))
+    rounds = timed("Researcher debate", lambda: run_debate(name, ticker, reports))
+    decision = timed("Trader decision", lambda: run_trader(name, ticker, reports, rounds))
+    risk = timed("Risk review", lambda: run_risk_manager(name, ticker, decision, data))
     decision = apply_risk_gate(decision, risk)
 
     return {

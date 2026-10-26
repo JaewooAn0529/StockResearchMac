@@ -83,12 +83,12 @@ func pixelImage(_ name: String) -> Image {
 }
 
 let pixelCharacterRoster: [String: (name: String, image: String, accent: Color)] = [
-    "fundamentals": ("펀더멘털 분석가", "sprite_fundamentals_idle", .indigo),
-    "news": ("뉴스 분석가", "sprite_news_idle", .indigo),
-    "technical": ("기술적 분석가", "sprite_technical_idle", .indigo),
-    "flow": ("수급 분석가", "sprite_flow_idle", .indigo),
-    "bull": ("매수 연구원", "sprite_bull_idle", .red),
-    "bear": ("매도 연구원", "sprite_bear_idle", .blue),
-    "trader": ("트레이더", "sprite_trader_idle", Theme.accent),
-    "risk": ("리스크 매니저", "sprite_risk_idle", .orange),
+    "fundamentals": ("Fundamentals analyst", "sprite_fundamentals_idle", .indigo),
+    "news": ("News analyst", "sprite_news_idle", .indigo),
+    "technical": ("Technical analyst", "sprite_technical_idle", .indigo),
+    "flow": ("Fund-flow analyst", "sprite_flow_idle", .indigo),
+    "bull": ("Bull researcher", "sprite_bull_idle", .red),
+    "bear": ("Bear researcher", "sprite_bear_idle", .blue),
+    "trader": ("Trader", "sprite_trader_idle", Theme.accent),
+    "risk": ("Risk manager", "sprite_risk_idle", .orange),
 ]

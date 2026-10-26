@@ -7,12 +7,12 @@ struct NewsListView: View {
     let state: LoadState<NewsResponse>
 
     var body: some View {
-        CardContainer(title: "관련 뉴스", icon: "newspaper.fill") {
+        CardContainer(title: "Related news", icon: "newspaper.fill") {
             CardStateView(state: state) { data in
                 AnyView(
                     Group {
                         if data.articles.isEmpty {
-                            Text("수집된 뉴스가 없습니다").font(.caption).foregroundStyle(.secondary)
+                            Text("No news collected").font(.caption).foregroundStyle(.secondary)
                         } else {
                             VStack(alignment: .leading, spacing: 10) {
                                 ForEach(data.articles) { article in

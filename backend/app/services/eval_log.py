@@ -41,7 +41,7 @@ def record_decision(result: dict) -> None:
         with LOG_PATH.open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception as exc:
-        print(f"[warn] 판단 기록 실패: {exc}")
+        print(f"[warn] failed to record decision: {exc}")
 
 
 def _price_on_or_after(ticker: str, target: date) -> tuple[str, int] | None:
@@ -99,7 +99,7 @@ def get_history(limit: int = 30) -> list[dict]:
             else:
                 e["status"] = "pending"  # decision was made today, closing price not settled yet
         except Exception as exc:
-            print(f"[warn] 판단 대조 실패 ({e.get('ticker')}): {exc}")
+            print(f"[warn] failed to compare decision ({e.get('ticker')}): {exc}")
             e["status"] = "error"
 
     return entries

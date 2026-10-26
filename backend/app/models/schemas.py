@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-DISCLAIMER = "이 정보는 투자 판단을 돕기 위한 참고 자료이며, 투자 판단과 그 책임은 본인에게 있습니다."
-HISTORICAL_DISCLAIMER = "과거 데이터이며 미래 결과를 보장하지 않습니다."
+DISCLAIMER = "This information is reference material to support investment decisions; the decision and its responsibility are your own."
+HISTORICAL_DISCLAIMER = "This is historical data and does not guarantee future results."
 
 
 class SearchResult(BaseModel):

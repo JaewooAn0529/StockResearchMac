@@ -16,9 +16,9 @@ enum LoadState<T> {
     }
 }
 
-private func formatEok(_ won: Int) -> String {
-    let eok = Double(won) / 1e8
-    return String(format: "%+.0f억", eok)
+private func formatBillions(_ won: Int) -> String {
+    let billions = Double(won) / 1e9
+    return String(format: "%+.1fB", billions)
 }
 
 struct CardContainer<Content: View>: View {
@@ -76,7 +76,7 @@ struct FlowCard: View {
     let state: LoadState<FlowsResponse>
 
     var body: some View {
-        CardContainer(title: "외국인/기관 수급", icon: "arrow.left.arrow.right.circle") {
+        CardContainer(title: "Foreign/institutional flows", icon: "arrow.left.arrow.right.circle") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
@@ -84,8 +84,8 @@ struct FlowCard: View {
                             HStack {
                                 Text(p.date).foregroundStyle(.secondary)
                                 Spacer()
-                                Text("외 \(formatEok(p.foreignNetBuy))")
-                                Text("기 \(formatEok(p.institutionNetBuy))")
+                                Text("Frgn ₩\(formatBillions(p.foreignNetBuy))")
+                                Text("Inst ₩\(formatBillions(p.institutionNetBuy))")
                             }
                             .font(.caption)
                         }
@@ -102,18 +102,18 @@ struct ValuationCard: View {
     let state: LoadState<ValuationResponse>
 
     var body: some View {
-        CardContainer(title: "밸류에이션 (PER/PBR)", icon: "chart.bar.fill") {
+        CardContainer(title: "Valuation (PER/PBR)", icon: "chart.bar.fill") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
                         Text("PER \(data.per, specifier: "%.1f") · PBR \(data.pbr, specifier: "%.2f")")
                             .font(.subheadline.bold())
                         if let min = data.perMin1y, let max = data.perMax1y {
-                            Text("1년 PER 밴드 \(min, specifier: "%.1f")~\(max, specifier: "%.1f")")
+                            Text("1-year PER band \(min, specifier: "%.1f")~\(max, specifier: "%.1f")")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         if let min = data.pbrMin1y, let max = data.pbrMax1y {
-                            Text("1년 PBR 밴드 \(min, specifier: "%.2f")~\(max, specifier: "%.2f")")
+                            Text("1-year PBR band \(min, specifier: "%.2f")~\(max, specifier: "%.2f")")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -129,13 +129,13 @@ struct ConsensusCard: View {
     let state: LoadState<ConsensusResponse>
 
     var body: some View {
-        CardContainer(title: "증권사 컨센서스", icon: "building.columns.fill", tinted: true) {
+        CardContainer(title: "Brokerage consensus", icon: "building.columns.fill", tinted: true) {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(data.opinionText ?? "-") (\(data.opinionScore, specifier: "%.2f")) · 목표주가 \(data.targetPrice.formatted())원")
+                        Text("\(data.opinionText ?? "-") (\(data.opinionScore, specifier: "%.2f")) · Target ₩\(data.targetPrice.formatted())")
                             .font(.subheadline.bold())
-                        Text("출처: \(data.source)")
+                        Text("Source: \(data.source)")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 )
@@ -150,18 +150,18 @@ struct TechnicalCard: View {
     let state: LoadState<TechnicalResponse>
 
     var body: some View {
-        CardContainer(title: "기술적 지표", icon: "waveform.path.ecg") {
+        CardContainer(title: "Technical indicators", icon: "waveform.path.ecg") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
                         if let d20 = data.disparity20 {
-                            Text("20일 이격도 \(d20, specifier: "%.1f")%").font(.caption)
+                            Text("20-day disparity \(d20, specifier: "%.1f")%").font(.caption)
                         }
                         if let d60 = data.disparity60 {
-                            Text("60일 이격도 \(d60, specifier: "%.1f")%").font(.caption)
+                            Text("60-day disparity \(d60, specifier: "%.1f")%").font(.caption)
                         }
                         if let ratio = data.volumeRatio {
-                            Text("거래량 20일평균 대비 \(ratio, specifier: "%.2f")배").font(.caption)
+                            Text("Volume \(ratio, specifier: "%.2f")x the 20-day average").font(.caption)
                         }
                         if data.rsi14 != nil || data.macd != nil {
                             Divider().padding(.vertical, 2)
@@ -170,16 +170,16 @@ struct TechnicalCard: View {
                             HStack(spacing: 4) {
                                 Text("RSI(14) \(rsi, specifier: "%.1f")").font(.caption)
                                 // Just a color hint for the conventional interpretation range — not a trading signal
-                                Text(rsi >= 70 ? "과매수 구간" : (rsi <= 30 ? "과매도 구간" : "중립 구간"))
+                                Text(rsi >= 70 ? "Overbought" : (rsi <= 30 ? "Oversold" : "Neutral"))
                                     .font(.caption2)
                                     .foregroundStyle(rsi >= 70 ? .red : (rsi <= 30 ? .blue : .secondary))
                             }
                         }
                         if let hist = data.macdHistogram {
-                            Text("MACD 히스토그램 \(hist, specifier: "%+.1f")").font(.caption)
+                            Text("MACD histogram \(hist, specifier: "%+.1f")").font(.caption)
                         }
                         if let pctB = data.bbPercentB {
-                            Text("볼린저 %B \(pctB, specifier: "%.2f") (0=하단 · 1=상단)").font(.caption)
+                            Text("Bollinger %B \(pctB, specifier: "%.2f") (0 = lower · 1 = upper)").font(.caption)
                         }
                     }
                 )
@@ -194,20 +194,20 @@ struct VolatilityCard: View {
     let state: LoadState<VolatilityResponse>
 
     var body: some View {
-        CardContainer(title: "변동성/베타", icon: "gauge.with.needle") {
+        CardContainer(title: "Volatility/beta", icon: "gauge.with.needle") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
                         if let beta = data.beta {
-                            Text("베타 \(beta, specifier: "%.2f") (\(data.benchmark) 대비)").font(.caption)
+                            Text("Beta \(beta, specifier: "%.2f") (vs \(data.benchmark))").font(.caption)
                         }
-                        Text("연율화 변동성 \(data.annualizedVolatilityPct, specifier: "%.1f")%").font(.caption)
+                        Text("Annualized volatility \(data.annualizedVolatilityPct, specifier: "%.1f")%").font(.caption)
                         Divider().padding(.vertical, 2)
-                        Text("1일 95% VaR (실측) \(data.var951dayHistoricalPct, specifier: "%.2f")%")
+                        Text("1-day 95% VaR (historical) \(data.var951dayHistoricalPct, specifier: "%.2f")%")
                             .font(.caption)
-                        Text("1일 95% VaR (정규분포 가정) \(data.var951dayPct, specifier: "%.2f")%")
+                        Text("1-day 95% VaR (normal dist.) \(data.var951dayPct, specifier: "%.2f")%")
                             .font(.caption2).foregroundStyle(.secondary)
-                        Text("권장 최대 비중 \(data.suggestedMaxPositionPct, specifier: "%.1f")% (일일 리스크 예산 2% 기준)")
+                        Text("Suggested max position \(data.suggestedMaxPositionPct, specifier: "%.1f")% (2% daily risk budget)")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 )
@@ -222,27 +222,27 @@ struct RsiSignalStatsCard: View {
     let state: LoadState<RsiSignalStatsResponse>
 
     var body: some View {
-        CardContainer(title: "RSI 신호 통계", icon: "chart.bar.xaxis") {
+        CardContainer(title: "RSI signal statistics", icon: "chart.bar.xaxis") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
-                            Text("표본 \(data.sampleCount)건")
+                            Text("Sample: \(data.sampleCount) cases")
                                 .font(.caption.bold())
                             if data.statisticallySignificant {
-                                Text("통계적으로 유의미").font(.caption2)
+                                Text("Statistically significant").font(.caption2)
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 6).padding(.vertical, 2)
                                     .background(.green, in: Capsule())
                             } else if !data.sufficientSample {
-                                Text("표본 부족").font(.caption2)
+                                Text("Insufficient sample").font(.caption2)
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 6).padding(.vertical, 2)
                                     .background(.secondary, in: Capsule())
                             }
                         }
                         if let hitRate = data.hitRatePct {
-                            Text("RSI\(data.rsiThreshold, specifier: "%.0f") 미만 진입 후 \(data.windowDays)거래일 내 \(data.gainThresholdPct, specifier: "%.0f")%↑ 확률 \(hitRate, specifier: "%.0f")%")
+                            Text("After RSI fell below \(data.rsiThreshold, specifier: "%.0f"): \(hitRate, specifier: "%.0f")% rose \(data.gainThresholdPct, specifier: "%.0f")%+ within \(data.windowDays) trading days")
                                 .font(.caption)
                         }
                         if let p = data.pValue {
@@ -264,7 +264,7 @@ struct PeersCard: View {
     let state: LoadState<PeerComparisonResponse>
 
     var body: some View {
-        CardContainer(title: "동종업계 비교", icon: "square.grid.2x2") {
+        CardContainer(title: "Peer comparison", icon: "square.grid.2x2") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
@@ -291,7 +291,7 @@ struct EarningsCalendarCard: View {
     let state: LoadState<EarningsCalendarResponse>
 
     var body: some View {
-        CardContainer(title: "다음 정기공시 D-day", icon: "calendar") {
+        CardContainer(title: "Next periodic filing D-day", icon: "calendar") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 4) {
@@ -311,12 +311,12 @@ struct RiskFlagsCard: View {
     let state: LoadState<RiskFlagsResponse>
 
     var body: some View {
-        CardContainer(title: "리스크 체크리스트", icon: "exclamationmark.triangle.fill") {
+        CardContainer(title: "Risk checklist", icon: "exclamationmark.triangle.fill") {
             CardStateView(state: state) { data in
                 AnyView(
                     Group {
                         if data.flags.isEmpty {
-                            Label("최근 180일 내 특이 공시 없음", systemImage: "checkmark.circle")
+                            Label("No notable filings in the last 180 days", systemImage: "checkmark.circle")
                                 .font(.caption).foregroundStyle(.secondary)
                         } else {
                             VStack(alignment: .leading, spacing: 6) {

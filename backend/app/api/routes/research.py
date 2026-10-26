@@ -28,9 +28,9 @@ def daily_snapshot(date: str, market: str = "KOSPI", top_n: int | None = None, i
         # missing, so this must be signaled with a distinct status code.
         raise HTTPException(
             status_code=503,
-            detail=f"KRX 응답 실패 (요청 제한 가능성) — 잠시 후 재시도하세요: {exc}",
+            detail=f"KRX request failed (possibly rate-limited) — retry shortly: {exc}",
         )
 
     if result is None:
-        raise HTTPException(status_code=404, detail="해당 날짜에 거래 데이터가 없습니다 (휴장일일 수 있음)")
+        raise HTTPException(status_code=404, detail="No trading data for that date (may be a market holiday)")
     return result

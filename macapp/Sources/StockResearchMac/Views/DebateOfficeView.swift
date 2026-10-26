@@ -30,17 +30,17 @@ struct DebateOfficeView: View {
         }
         for round in data.debateRounds {
             if let bull = roster["bull"] {
-                out.append(Turn(key: "bull-\(round.round)", name: "\(bull.name) · \(round.round)라운드", image: bull.image, text: round.bull, accent: bull.accent))
+                out.append(Turn(key: "bull-\(round.round)", name: "\(bull.name) · Round \(round.round)", image: bull.image, text: round.bull, accent: bull.accent))
             }
             if let bear = roster["bear"] {
-                out.append(Turn(key: "bear-\(round.round)", name: "\(bear.name) · \(round.round)라운드", image: bear.image, text: round.bear, accent: bear.accent))
+                out.append(Turn(key: "bear-\(round.round)", name: "\(bear.name) · Round \(round.round)", image: bear.image, text: round.bear, accent: bear.accent))
             }
         }
         if let trader = roster["trader"] {
             out.append(Turn(key: "trader", name: trader.name, image: trader.image, text: "[\(data.decision.decision)] " + data.decision.rationale, accent: trader.accent))
         }
         if let risk = roster["risk"] {
-            let text = data.riskReview.concern.isEmpty ? "\(data.riskReview.verdict) — 특이사항 없음" : data.riskReview.concern
+            let text = data.riskReview.concern.isEmpty ? "\(data.riskReview.verdict) — no concerns" : data.riskReview.concern
             out.append(Turn(key: "risk", name: risk.name, image: risk.image, text: text, accent: risk.accent))
         }
         return out
@@ -113,7 +113,7 @@ struct DebateOfficeView: View {
                 Text("\(min(turnIndex + 1, turns.count)) / \(turns.count)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Button(revealed ? "다시보기" : "건너뛰기") {
+                Button(revealed ? "Replay" : "Skip") {
                     if revealed {
                         playbackTask?.cancel()
                         turnIndex = 0

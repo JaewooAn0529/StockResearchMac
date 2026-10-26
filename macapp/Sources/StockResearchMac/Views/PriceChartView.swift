@@ -33,7 +33,7 @@ struct PriceChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Chart(points, id: \.date) { p in
-                AreaMark(x: .value("날짜", p.date), y: .value("종가", p.close))
+                AreaMark(x: .value("Date", p.date), y: .value("Close", p.close))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [trendColor.opacity(0.25), trendColor.opacity(0.02)],
@@ -41,7 +41,7 @@ struct PriceChartView: View {
                         )
                     )
                     .interpolationMethod(.catmullRom)
-                LineMark(x: .value("날짜", p.date), y: .value("종가", p.close))
+                LineMark(x: .value("Date", p.date), y: .value("Close", p.close))
                     .foregroundStyle(trendColor)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.catmullRom)
@@ -51,7 +51,7 @@ struct PriceChartView: View {
             .chartYScale(domain: .automatic(includesZero: false))
 
             Chart(points, id: \.date) { p in
-                BarMark(x: .value("날짜", p.date), y: .value("거래량", p.volume))
+                BarMark(x: .value("Date", p.date), y: .value("Volume", p.volume))
                     .foregroundStyle(.secondary.opacity(0.5))
             }
             .frame(height: 50)

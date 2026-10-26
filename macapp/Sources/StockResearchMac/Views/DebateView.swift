@@ -1,10 +1,10 @@
 import SwiftUI
 
 private let analystLabels: [String: String] = [
-    "fundamentals": "펀더멘털 분석가",
-    "news": "뉴스 분석가",
-    "technical": "기술적 분석가",
-    "flow": "수급 분석가",
+    "fundamentals": "Fundamentals analyst",
+    "news": "News analyst",
+    "technical": "Technical analyst",
+    "flow": "Fund-flow analyst",
 ]
 
 private let analystIcons: [String: String] = [
@@ -27,7 +27,7 @@ struct DebateView: View {
                 loadingView
             case .failed(let message):
                 VStack(spacing: 12) {
-                    Text("토론 실패").font(.headline)
+                    Text("Debate failed").font(.headline)
                     Text(message).font(.caption).foregroundStyle(.secondary)
                 }
                 .padding()
@@ -35,7 +35,7 @@ struct DebateView: View {
                 resultView(data)
             }
         }
-        .navigationTitle("멀티에이전트 토론")
+        .navigationTitle("Multi-agent debate")
         .task { await runDebate() }
         .task {
             while !Task.isCancelled {
@@ -51,9 +51,9 @@ struct DebateView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(Theme.accent)
                 .symbolEffect(.pulse, options: .repeating)
-            Text("분석가 4인 → bull/bear 토론 → 트레이더 판단 → 리스크 검토")
+            Text("4 analysts → bull/bear debate → trader decision → risk review")
                 .font(.subheadline)
-            Text("로컬 LLM 호출 10회, 보통 2분 내외 걸립니다 · \(elapsed)초 경과")
+            Text("10 local LLM calls, usually about 2 minutes · \(elapsed)s elapsed")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .contentTransition(.numericText())
@@ -80,25 +80,25 @@ struct DebateView: View {
             decisionCard(data.decision)
             riskReviewCard(data.riskReview)
 
-            SectionHeader(title: "분석가 리포트", icon: "person.text.rectangle.fill")
+            SectionHeader(title: "Analyst reports", icon: "person.text.rectangle.fill")
             ForEach(Array(data.analystReports.keys.sorted()), id: \.self) { key in
                 CardContainer(title: analystLabels[key] ?? key, icon: analystIcons[key]) {
                     Text(data.analystReports[key] ?? "").font(.callout)
                 }
             }
 
-            SectionHeader(title: "연구원 토론", icon: "bubble.left.and.bubble.right.fill")
+            SectionHeader(title: "Researcher debate", icon: "bubble.left.and.bubble.right.fill")
             ForEach(data.debateRounds) { round in
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("\(round.round)라운드")
+                    Text("Round \(round.round)")
                         .font(.caption.bold())
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Theme.accent.opacity(0.15), in: Capsule())
                         .foregroundStyle(Theme.accent)
-                    CardContainer(title: "매수 측", icon: "arrow.up.circle", iconColor: .red) {
+                    CardContainer(title: "Bull side", icon: "arrow.up.circle", iconColor: .red) {
                         Text(round.bull).font(.callout)
                     }
-                    CardContainer(title: "매도 측", icon: "arrow.down.circle", iconColor: .blue) {
+                    CardContainer(title: "Bear side", icon: "arrow.down.circle", iconColor: .blue) {
                         Text(round.bear).font(.callout)
                     }
                 }
@@ -108,7 +108,7 @@ struct DebateView: View {
                 auditCard(timings, total: data.totalSeconds, calls: data.llmCalls)
             }
 
-            Text("이 정보는 투자 판단을 돕기 위한 참고 자료이며, 투자 판단과 그 책임은 본인에게 있습니다.")
+            Text("This information is reference material to support investment decisions; the decision and its responsibility are your own.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -118,22 +118,22 @@ struct DebateView: View {
     /// How long each stage took — for spotting slow steps and getting a feel
     /// for what the cost would be if switched to a cloud API.
     private func auditCard(_ timings: [AgentTiming], total: Double?, calls: Int?) -> some View {
-        CardContainer(title: "실행 기록", icon: "clock.badge.checkmark") {
+        CardContainer(title: "Run log", icon: "clock.badge.checkmark") {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(timings) { t in
                     HStack {
                         Text(t.stage).font(.caption)
                         Spacer()
-                        Text("\(t.seconds, specifier: "%.1f")초")
+                        Text("\(t.seconds, specifier: "%.1f")s")
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                 }
                 Divider()
                 HStack {
-                    Text("합계").font(.caption.bold())
+                    Text("Total").font(.caption.bold())
                     Spacer()
-                    Text("\(total ?? 0, specifier: "%.1f")초 · LLM \(calls ?? 0)회")
+                    Text("\(total ?? 0, specifier: "%.1f")s · \(calls ?? 0) LLM calls")
                         .font(.caption.bold().monospacedDigit())
                 }
             }
@@ -150,8 +150,8 @@ struct DebateView: View {
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(color)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("확신도 \(decision.confidence)").font(.caption).foregroundStyle(.secondary)
-                    Text("토론 우세: \(decision.winningSide)").font(.caption).foregroundStyle(.secondary)
+                    Text("Confidence \(decision.confidence)").font(.caption).foregroundStyle(.secondary)
+                    Text("Debate winner: \(decision.winningSide)").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
             }
@@ -159,7 +159,7 @@ struct DebateView: View {
             // If the risk approval gate overturned the decision, call that out prominently
             if decision.gateApplied == true, let original = decision.originalDecision {
                 Label(
-                    "리스크 검토에서 반려되어 \(original) → HOLD로 강등되었습니다",
+                    "Rejected in risk review — downgraded \(original) → HOLD",
                     systemImage: "shield.lefthalf.filled"
                 )
                 .font(.caption.bold())
@@ -171,7 +171,7 @@ struct DebateView: View {
             Text(decision.rationale).font(.body)
             if !decision.keyRisks.isEmpty {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("핵심 위험").font(.caption.bold())
+                    Text("Key risks").font(.caption.bold())
                     ForEach(decision.keyRisks, id: \.self) { risk in
                         Text("· \(risk)").font(.caption)
                     }
@@ -193,15 +193,15 @@ struct DebateView: View {
             default: return ("exclamationmark.triangle.fill", .orange)
             }
         }()
-        return CardContainer(title: "리스크 매니저: \(review.verdict)", icon: icon, iconColor: color) {
+        return CardContainer(title: "Risk manager: \(review.verdict)", icon: icon, iconColor: color) {
             VStack(alignment: .leading, spacing: 4) {
                 if !review.concern.isEmpty {
                     Text(review.concern).font(.callout)
                 }
-                Text("조정된 확신도: \(review.adjustedConfidence)")
+                Text("Adjusted confidence: \(review.adjustedConfidence)")
                     .font(.caption).foregroundStyle(.secondary)
                 if let pct = review.suggestedPositionPct {
-                    Text("권장 최대 비중: 포트폴리오의 \(pct, specifier: "%.1f")% 이하 (VaR 기반 계산값)")
+                    Text("Suggested max position: \(pct, specifier: "%.1f")% of the portfolio (computed from VaR)")
                         .font(.caption.bold())
                         .foregroundStyle(Theme.accent)
                 }

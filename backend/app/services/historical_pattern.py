@@ -53,7 +53,7 @@ def get_recovery_history(ticker: str, buy_price: float) -> dict | None:
             "unresolved_count": 0,
             "avg_recovery_days": None,
             "median_recovery_days": None,
-            "summary": "현재 매수가보다 높거나 같아 하락 회복 히스토리가 해당하지 않습니다.",
+            "summary": "The current price is at or above your purchase price, so drawdown-recovery history doesn't apply.",
         }
 
     running_max = closes.cummax()
@@ -106,7 +106,7 @@ def get_recovery_history(ticker: str, buy_price: float) -> dict | None:
             "unresolved_count": unresolved_count,
             "avg_recovery_days": None,
             "median_recovery_days": None,
-            "summary": "참고할 만한 과거 사례가 충분하지 않습니다.",
+            "summary": "There aren't enough past cases to reference.",
         }
 
     avg_days = round(statistics.mean(recovery_days))
@@ -122,8 +122,8 @@ def get_recovery_history(ticker: str, buy_price: float) -> dict | None:
         "avg_recovery_days": avg_days,
         "median_recovery_days": median_days,
         "summary": (
-            f"역사적으로는 이 종목이 매수가 대비 비슷한 폭(약 {current_return_pct:.1f}%)만큼 "
-            f"하락했다가 이전 고점을 회복하기까지 평균 {avg_days}일(중앙값 {median_days}일) "
-            f"걸린 사례가 {sample_count}건 있었습니다."
+            f"Historically, there were {sample_count} cases where this stock fell by a similar "
+            f"amount (about {current_return_pct:.1f}% vs the purchase price) and took an average of "
+            f"{avg_days} days (median {median_days}) to recover its previous high."
         ),
     }

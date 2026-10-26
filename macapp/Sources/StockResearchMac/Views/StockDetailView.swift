@@ -39,7 +39,7 @@ struct StockDetailView: View {
                 }
 
                 NavigationLink(value: DebateRoute(ticker: ticker)) {
-                    Label("멀티에이전트 토론 시작", systemImage: "bubble.left.and.bubble.right")
+                    Label("Start multi-agent debate", systemImage: "bubble.left.and.bubble.right")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)
@@ -47,7 +47,7 @@ struct StockDetailView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.accent)
 
-                SectionHeader(title: "지표", icon: "square.grid.2x2.fill")
+                SectionHeader(title: "Indicators", icon: "square.grid.2x2.fill")
                 LazyVGrid(columns: cardColumns, spacing: 12) {
                     FlowCard(state: flowsState)
                     ValuationCard(state: valuationState)
@@ -62,7 +62,7 @@ struct StockDetailView: View {
 
                 NewsListView(state: newsState)
 
-                Text("이 정보는 투자 판단을 돕기 위한 참고 자료이며, 투자 판단과 그 책임은 본인에게 있습니다.")
+                Text("This information is reference material to support investment decisions; the decision and its responsibility are your own.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -112,7 +112,7 @@ struct StockDetailView: View {
             StockLogoView(ticker: ticker, size: 44)
             Text(displayName).font(.largeTitle.bold())
             if case .loaded(let price) = priceState {
-                Text("\(price.currentPrice.formatted())원")
+                Text("₩\(price.currentPrice.formatted())")
                     .font(.title2)
                     .monospacedDigit()
                     .contentTransition(.numericText())

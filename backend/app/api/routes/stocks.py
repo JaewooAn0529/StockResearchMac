@@ -41,7 +41,7 @@ def search_stocks(q: str = Query(..., min_length=1)):
 def get_price(ticker: str):
     data = price_service.get_price_and_chart(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"시세 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No price data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return PriceResponse(ticker=ticker, name=name, **data)
 
@@ -50,7 +50,7 @@ def get_price(ticker: str):
 def get_flows(ticker: str):
     series = flows_service.get_flows(ticker)
     if series is None:
-        raise HTTPException(status_code=404, detail=f"수급 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No fund-flow data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return FlowsResponse(ticker=ticker, name=name, series=series)
 
@@ -59,7 +59,7 @@ def get_flows(ticker: str):
 def get_valuation(ticker: str):
     data = valuation_service.get_valuation(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"밸류에이션 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No valuation data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return ValuationResponse(ticker=ticker, name=name, **data)
 
@@ -70,7 +70,7 @@ def get_consensus(ticker: str):
     if data is None:
         raise HTTPException(
             status_code=404,
-            detail=f"컨센서스 데이터가 없습니다(추정 증권사 3곳 미만이거나 커버리지 없음): {ticker}",
+            detail=f"No consensus data (fewer than 3 brokers estimating, or no coverage): {ticker}",
         )
     name = krx.get_market_ticker_name(ticker)
     return ConsensusResponse(ticker=ticker, name=name, **data)
@@ -80,7 +80,7 @@ def get_consensus(ticker: str):
 def get_technical(ticker: str):
     data = technical_service.get_technical(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"기술적 지표 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No technical indicator data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return TechnicalResponse(ticker=ticker, name=name, **data)
 
@@ -89,7 +89,7 @@ def get_technical(ticker: str):
 def get_volatility(ticker: str):
     data = volatility_service.get_volatility_beta(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"변동성/베타 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No volatility/beta data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return VolatilityResponse(ticker=ticker, name=name, **data)
 
@@ -98,7 +98,7 @@ def get_volatility(ticker: str):
 def get_peers(ticker: str):
     data = peers_service.get_peer_comparison(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"동종업계 비교 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No peer comparison data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return PeerComparisonResponse(ticker=ticker, name=name, **data)
 
@@ -107,7 +107,7 @@ def get_peers(ticker: str):
 def get_earnings_calendar(ticker: str):
     data = dart_service.get_earnings_calendar(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"실적발표 캘린더 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No earnings calendar data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return EarningsCalendarResponse(ticker=ticker, name=name, **data)
 
@@ -116,7 +116,7 @@ def get_earnings_calendar(ticker: str):
 def get_risk_flags(ticker: str):
     flags = dart_service.get_risk_flags(ticker)
     if flags is None:
-        raise HTTPException(status_code=404, detail=f"리스크 체크리스트 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No risk checklist data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return RiskFlagsResponse(ticker=ticker, name=name, flags=flags)
 
@@ -132,7 +132,7 @@ def get_news(ticker: str):
 def get_recovery_history(ticker: str, buy_price: float = Query(..., gt=0)):
     data = historical_pattern_service.get_recovery_history(ticker, buy_price)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"과거 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No historical data found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return RecoveryHistoryResponse(ticker=ticker, name=name, **data)
 
@@ -141,6 +141,6 @@ def get_recovery_history(ticker: str, buy_price: float = Query(..., gt=0)):
 def get_rsi_signal_stats(ticker: str):
     data = signal_stats_service.get_rsi_signal_stats(ticker)
     if data is None:
-        raise HTTPException(status_code=404, detail=f"RSI 신호 통계 데이터를 찾을 수 없습니다: {ticker}")
+        raise HTTPException(status_code=404, detail=f"No RSI signal statistics found: {ticker}")
     name = krx.get_market_ticker_name(ticker)
     return RsiSignalStatsResponse(ticker=ticker, name=name, **data)

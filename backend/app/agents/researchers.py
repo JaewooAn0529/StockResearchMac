@@ -13,46 +13,46 @@ from app.agents.client import ask
 from app.core.config import MAX_DEBATE_ROUNDS
 
 _STYLE = """
-분량은 5문장 이내. 분석가 리포트에 실제로 있는 근거만 인용하고, 없는 사실을 지어내지 않는다.
-상대 발언이 주어졌다면 가장 약한 논거 하나를 지목해 반박하는 것으로 시작한다.
-자기 입장을 정직하게 변론하되, 상대 지적이 맞으면 인정하고 그 위에서 논지를 다시 세운다.
+Keep it to 5 sentences or fewer. Cite only evidence actually in the analyst reports; never invent facts.
+If the other side's statement is given, open by naming their single weakest argument and rebutting it.
+Argue your side honestly — if the other side makes a valid point, concede it and rebuild your case on top of it.
 """.strip()
 
 _BULL = (
-    "당신은 매수 측 연구원이다. 이 종목을 사야 할 이유를 변론한다. "
-    f"근거 없는 낙관이 아니라 데이터에 있는 상승 논거를 찾아내는 게 역할이다.\n\n{_STYLE}"
+    "You are the bull-side researcher. Argue the case for buying this stock. "
+    f"Your job is to find the upside arguments actually in the data, not baseless optimism.\n\n{_STYLE}"
 )
 
 _BEAR = (
-    "당신은 매도 측 연구원이다. 이 종목을 피해야 할 이유를 변론한다. "
-    f"막연한 비관이 아니라 데이터에 있는 하방 위험을 짚어내는 게 역할이다.\n\n{_STYLE}"
+    "You are the bear-side researcher. Argue the case for avoiding this stock. "
+    f"Your job is to point out the downside risks actually in the data, not vague pessimism.\n\n{_STYLE}"
 )
 
 
 def _reports_block(reports: dict[str, str]) -> str:
     labels = {
-        "fundamentals": "펀더멘털 분석가",
-        "news": "뉴스 분석가",
-        "technical": "기술적 분석가",
-        "flow": "수급 분석가",
+        "fundamentals": "Fundamentals analyst",
+        "news": "News analyst",
+        "technical": "Technical analyst",
+        "flow": "Fund-flow analyst",
     }
     return "\n\n".join(f"[{labels[k]}]\n{v}" for k, v in reports.items())
 
 
 def run_debate(name: str, ticker: str, reports: dict[str, str]) -> list[dict]:
     """Returns per-round statements in the form [{round, bull, bear}, ...]."""
-    base = f"종목: {name} ({ticker})\n\n분석가 리포트:\n{_reports_block(reports)}"
+    base = f"Stock: {name} ({ticker})\n\nAnalyst reports:\n{_reports_block(reports)}"
     rounds = []
     bull_last = bear_last = None
 
     for i in range(1, MAX_DEBATE_ROUNDS + 1):
         bull_prompt = base
         if bear_last:
-            bull_prompt += f"\n\n매도 측 직전 발언:\n{bear_last}"
+            bull_prompt += f"\n\nBear side's previous statement:\n{bear_last}"
         bull_last = ask(_BULL, bull_prompt, max_tokens=600)
 
         # Bear responds after seeing Bull's statement from the same round (a back-and-forth, not simultaneous statements)
-        bear_prompt = f"{base}\n\n매수 측 직전 발언:\n{bull_last}"
+        bear_prompt = f"{base}\n\nBull side's previous statement:\n{bull_last}"
         bear_last = ask(_BEAR, bear_prompt, max_tokens=600)
 
         rounds.append({"round": i, "bull": bull_last, "bear": bear_last})

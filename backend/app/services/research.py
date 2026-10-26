@@ -60,7 +60,7 @@ def _same_day_news_count(name: str, date_str: str) -> int | None:
     try:
         articles = news_service.get_news(name, limit=100)
     except Exception as exc:
-        print(f"[warn] {name} 뉴스 조회 실패: {exc}")
+        print(f"[warn] news lookup failed for {name}: {exc}")
         return None
     return sum(1 for a in articles if a["published_at"].startswith(target))
 
@@ -80,7 +80,7 @@ def get_daily_snapshot(
     quickly).
     """
     if market not in _INDEX_CODE:
-        raise ValueError(f"지원하지 않는 시장: {market} (KOSPI/KOSDAQ만 가능)")
+        raise ValueError(f"Unsupported market: {market} (KOSPI/KOSDAQ only)")
 
     with _detect_upstream_errors():
         flow = stock.get_market_net_purchases_of_equities_by_ticker(date_str, date_str, market, "외국인")

@@ -83,8 +83,8 @@ def get_rsi_signal_stats(
             "t_statistic": None,
             "p_value": None,
             "summary": (
-                f"지난 데이터에서 RSI가 {rsi_threshold:g} 미만으로 떨어진 사례 자체가 "
-                f"{n}건뿐이라 통계 분석을 할 수 있는 최소 표본에 못 미칩니다."
+                f"In the past data, RSI fell below {rsi_threshold:g} only {n} time(s) — "
+                f"below the minimum sample needed for any statistical analysis."
             ),
         }
 
@@ -100,23 +100,25 @@ def get_rsi_signal_stats(
 
     if not sufficient:
         summary = (
-            f"과거 RSI {rsi_threshold:g} 미만 진입 사례는 {n}건으로, 신뢰할 만한 통계 검정을 하기엔 "
-            f"표본이 적습니다. 참고로만 보면 이후 {window_days}거래일 내 {gain_threshold_pct:g}% 이상 "
-            f"오른 사례는 {hit_rate_pct:.0f}%였지만(p={p_value:.3f}), 표본 수 때문에 통계적으로 "
-            f"유의미하다고 볼 수 없습니다."
+            f"There were {n} past cases of RSI dropping below {rsi_threshold:g} — too few for a "
+            f"reliable statistical test. For reference only, {hit_rate_pct:.0f}% of them rose "
+            f"{gain_threshold_pct:g}%+ within {window_days} trading days (p={p_value:.3f}), but the "
+            f"sample size means this can't be called statistically significant."
         )
     elif significant:
-        direction = "높았습니다" if mean_signal > mean_baseline else "낮았습니다"
+        direction = "higher" if mean_signal > mean_baseline else "lower"
         summary = (
-            f"과거 {n}건의 RSI {rsi_threshold:g} 미만 진입 사례를 분석한 결과, 이후 {window_days}거래일 "
-            f"평균 수익률은 {mean_signal:+.1f}%로 이 종목의 평소 {window_days}거래일 평균 수익률"
-            f"({mean_baseline:+.1f}%)보다 통계적으로 유의미하게 {direction} (p={p_value:.3f} < 0.05)."
+            f"Across {n} past cases of RSI dropping below {rsi_threshold:g}, the average return over "
+            f"the next {window_days} trading days was {mean_signal:+.1f}%, statistically significantly "
+            f"{direction} than this stock's usual {window_days}-day average ({mean_baseline:+.1f}%) "
+            f"(p={p_value:.3f} < 0.05)."
         )
     else:
         summary = (
-            f"과거 {n}건의 RSI {rsi_threshold:g} 미만 진입 사례를 분석했지만, 이후 {window_days}거래일 "
-            f"수익률(평균 {mean_signal:+.1f}%)이 이 종목의 평소 수익률({mean_baseline:+.1f}%)과 "
-            f"통계적으로 유의미하게 다르다고 보기는 어려웠습니다(p={p_value:.3f})."
+            f"Across {n} past cases of RSI dropping below {rsi_threshold:g}, the return over the next "
+            f"{window_days} trading days (average {mean_signal:+.1f}%) was not statistically "
+            f"significantly different from this stock's usual return ({mean_baseline:+.1f}%) "
+            f"(p={p_value:.3f})."
         )
 
     return {

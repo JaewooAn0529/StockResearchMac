@@ -22,18 +22,18 @@ struct PositionCard: View {
     }
 
     private var inputForm: some View {
-        CardContainer(title: "내 포지션", icon: "person.crop.circle.badge.plus") {
+        CardContainer(title: "My position", icon: "person.crop.circle.badge.plus") {
             VStack(alignment: .leading, spacing: 8) {
-                Text("매수가와 매수일을 입력하면 현재가 대비 손익을 계산해 보여줍니다.")
+                Text("Enter your purchase price and date to see your profit/loss against the current price.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack(spacing: 8) {
-                    TextField("매수가(원)", text: $priceInput)
+                    TextField("Purchase price (₩)", text: $priceInput)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 110)
                     DatePicker("", selection: $dateInput, in: ...Date(), displayedComponents: .date)
                         .labelsHidden()
-                    Button("저장", action: save)
+                    Button("Save", action: save)
                         .buttonStyle(.borderedProminent)
                         .tint(Theme.accent)
                         .disabled(Double(priceInput) == nil)
@@ -48,13 +48,13 @@ struct PositionCard: View {
     }
 
     private func displayView(_ position: Position) -> some View {
-        CardContainer(title: "내 포지션", icon: "person.crop.circle.fill") {
+        CardContainer(title: "My position", icon: "person.crop.circle.fill") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("매수가 \(Int(position.buyPrice).formatted())원")
+                        Text("Bought at ₩\(Int(position.buyPrice).formatted())")
                             .font(.caption)
-                        Text("매수일 \(position.buyDate.formatted(date: .abbreviated, time: .omitted))")
+                        Text("Bought on \(position.buyDate.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -66,20 +66,20 @@ struct PositionCard: View {
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .help("포지션 삭제")
+                    .help("Delete position")
                 }
 
                 if let currentPrice {
                     let diff = Double(currentPrice) - position.buyPrice
                     let pct = diff / position.buyPrice * 100
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(diff >= 0 ? "+" : "")\(Int(diff).formatted())원")
+                        Text("\(diff >= 0 ? "+" : "")₩\(Int(diff).formatted())")
                             .font(.title3.bold())
                             .monospacedDigit()
                             .foregroundStyle(Theme.changeColor(pct))
                         ChangeBadge(pct: pct)
                     }
-                    Text("현재가(\(currentPrice.formatted())원) - 매수가 기준 단순 계산입니다.")
+                    Text("A simple calculation: current price (₩\(currentPrice.formatted())) minus purchase price.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else {
@@ -100,15 +100,15 @@ struct RecoveryHistoryCard: View {
     @State private var state: LoadState<RecoveryHistoryResponse> = .loading
 
     var body: some View {
-        CardContainer(title: "과거 유사 하락 사례 (참고용)", icon: "clock.arrow.circlepath") {
+        CardContainer(title: "Similar past drawdowns (reference only)", icon: "clock.arrow.circlepath") {
             CardStateView(state: state) { data in
                 AnyView(
                     VStack(alignment: .leading, spacing: 6) {
                         Text(data.summary).font(.callout)
                         if data.sufficientSample {
                             Text(
-                                "표본 \(data.sampleCount)건"
-                                + (data.unresolvedCount > 0 ? " · 아직 회복 안 한 사례 \(data.unresolvedCount)건은 평균에서 제외" : "")
+                                "Sample: \(data.sampleCount) cases"
+                                + (data.unresolvedCount > 0 ? " · \(data.unresolvedCount) not-yet-recovered cases excluded from the average" : "")
                             )
                             .font(.caption2)
                             .foregroundStyle(.secondary)

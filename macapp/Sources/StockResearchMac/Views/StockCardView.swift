@@ -39,7 +39,7 @@ struct StockCardView: View {
             Group {
                 if let price {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(price.currentPrice.formatted())원")
+                        Text("₩\(price.currentPrice.formatted())")
                             .font(.title2.bold())
                             .monospacedDigit()
                             .contentTransition(.numericText())
@@ -47,7 +47,7 @@ struct StockCardView: View {
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .leading)))
                 } else if loadFailed {
-                    Text("시세 조회 실패").font(.caption).foregroundStyle(.secondary)
+                    Text("Price lookup failed").font(.caption).foregroundStyle(.secondary)
                 } else {
                     ProgressView().controlSize(.small)
                 }

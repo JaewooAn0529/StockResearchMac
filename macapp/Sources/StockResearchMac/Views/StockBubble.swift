@@ -17,7 +17,7 @@ struct StockBubble: View {
                         .lineLimit(1)
                     if let price {
                         HStack(spacing: 4) {
-                            Text("\(price.currentPrice.formatted())원")
+                            Text("₩\(price.currentPrice.formatted())")
                                 .font(.caption2)
                                 .monospacedDigit()
                                 .contentTransition(.numericText())

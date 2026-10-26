@@ -8,8 +8,8 @@ enum APIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notFound(let detail): return detail
-        case .server(let code, let detail): return "서버 오류(\(code)): \(detail)"
-        case .decoding(let err): return "응답 파싱 실패: \(err.localizedDescription)"
+        case .server(let code, let detail): return "Server error (\(code)): \(detail)"
+        case .decoding(let err): return "Failed to parse response: \(err.localizedDescription)"
         }
     }
 }
@@ -37,11 +37,11 @@ struct APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse else {
-            throw APIError.server(0, "알 수 없는 응답")
+            throw APIError.server(0, "Unknown response")
         }
 
         if http.statusCode == 404 {
-            let detail = (try? decoder.decode([String: String].self, from: data))?["detail"] ?? "데이터 없음"
+            let detail = (try? decoder.decode([String: String].self, from: data))?["detail"] ?? "No data"
             throw APIError.notFound(detail)
         }
         guard (200..<300).contains(http.statusCode) else {

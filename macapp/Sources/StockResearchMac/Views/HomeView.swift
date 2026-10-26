@@ -17,7 +17,7 @@ struct HomeView: View {
                 } else if favorites.items.isEmpty {
                     VStack {
                         Spacer()
-                        Text("검색해서 관심종목을 추가하면 오피스 동료들 옆에 표시됩니다")
+                        Text("Search and add stocks to your watchlist — they'll appear next to your office colleagues")
                             .font(.callout)
                             .foregroundStyle(.white)
                             .padding(10)
@@ -40,11 +40,11 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem {
                     NavigationLink(value: HistoryRoute()) {
-                        Label("판단 기록", systemImage: "clock.arrow.circlepath")
+                        Label("Decision history", systemImage: "clock.arrow.circlepath")
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "종목명 또는 티커 검색")
+            .searchable(text: $searchText, prompt: "Search by stock name or ticker")
             .onChange(of: searchText) { _, newValue in
                 debounceSearch(newValue)
             }
