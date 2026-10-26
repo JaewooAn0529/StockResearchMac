@@ -70,6 +70,9 @@ for full attribution.
 
 A running log of what's landed on `main`, newest first.
 
+- `adb8e77` — Switched the app's UI and the agents' output to English (stock
+  names stay Korean); a full debate dropped from ~135-248s to ~75s since the
+  local model spends far fewer tokens on English
 - `391a25f` — Fixed `_ollama_ask_json` only retrying on Chinese-drift and not
   on a truncated/malformed JSON response, which crashed the whole debate;
   also raised its token budget so the local model has room to finish
